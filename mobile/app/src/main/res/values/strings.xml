@@ -1,0 +1,44 @@
+<resources>
+    <string name="app_name">LostLink</string>
+    <string name="app_tagline">Campus Lost \u0026 Found</string>
+
+    <!-- Login Screen -->
+    <string name="login_title">Welcome Back</string>
+    <string name="login_subtitle">Sign in to your LostLink account</string>
+    <string name="hint_identifier">Student ID or Email</string>
+    <string name="hint_password">Password</string>
+    <string name="btn_login">Sign In</string>
+    <string name="link_register">Don\'t have an account? <b>Sign Up</b></string>
+
+    <!-- Register Screen -->
+    <string name="register_title">Create Account</string>
+    <string name="register_subtitle">Join the LostLink community</string>
+    <string name="hint_student_id">Student ID (XX-XXXX-XXX)</string>
+    <string name="hint_email">Email Address</string>
+    <string name="hint_first_name">First Name</string>
+    <string name="hint_last_name">Last Name</string>
+    <string name="hint_confirm_password">Confirm Password</string>
+    <string name="btn_register">Create Account</string>
+    <string name="link_login">Already have an account? <b>Sign In</b></string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_welcome">Welcome back,</string>
+    <string name="dashboard_subtitle">Your LostLink Dashboard</string>
+    <string name="label_student_id">Student ID</string>
+    <string name="label_email">Email</string>
+    <string name="label_role">Role</string>
+    <string name="btn_logout">Sign Out</string>
+    <string name="dashboard_coming_soon">Item feed coming in Phase 3 🚀</string>
+
+    <!-- Validation Messages -->
+    <string name="error_field_required">This field is required</string>
+    <string name="error_invalid_email">Please enter a valid email</string>
+    <string name="error_invalid_student_id">Must follow XX-XXXX-XXX format</string>
+    <string name="error_password_short">Password must be at least 8 characters</string>
+    <string name="error_password_mismatch">Passwords do not match</string>
+    <string name="error_network">Network error. Check your connection.</string>
+    <string name="error_server">Server error. Please try again later.</string>
+
+    <!-- General -->
+    <string name="loading">Please wait…</string>
+</resources>

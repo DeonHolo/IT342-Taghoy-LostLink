@@ -1,0 +1,39 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Base.Theme.LostLink" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primary_dark</item>
+        <item name="colorAccent">@color/secondary</item>
+        <item name="colorOnPrimary">@color/text_on_primary</item>
+        <item name="android:statusBarColor">@color/primary_dark</item>
+        <item name="android:windowBackground">@color/bg_surface</item>
+    </style>
+
+    <style name="Theme.LostLink" parent="Base.Theme.LostLink" />
+
+    <!-- Input field style -->
+    <style name="LostLink.TextInputLayout" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="boxCornerRadiusTopStart">12dp</item>
+        <item name="boxCornerRadiusTopEnd">12dp</item>
+        <item name="boxCornerRadiusBottomStart">12dp</item>
+        <item name="boxCornerRadiusBottomEnd">12dp</item>
+        <item name="boxStrokeColor">@color/input_stroke_focused</item>
+        <item name="hintTextColor">@color/primary</item>
+    </style>
+
+    <!-- Primary button style -->
+    <style name="LostLink.Button.Primary" parent="Widget.Material3.Button">
+        <item name="cornerRadius">12dp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:letterSpacing">0.02</item>
+    </style>
+
+    <!-- Outline button style -->
+    <style name="LostLink.Button.Outline" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="cornerRadius">12dp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textSize">16sp</item>
+        <item name="strokeColor">@color/error</item>
+        <item name="android:textColor">@color/error</item>
+    </style>
+</resources>

@@ -16,7 +16,7 @@
 | **MySQL Connector**      | `mysql:mysql-connector-java:8.0.33`   | `com.mysql:mysql-connector-j` (managed by Boot) |
 | **Hibernate Dialect**    | `org.hibernate.dialect.MySQL8Dialect` | `org.hibernate.dialect.MySQLDialect`      |
 | **Lombok Version**       | Explicit `1.18.30` in compiler plugin | Managed by Spring Boot (no version needed)|
-| **DB Credentials**       | `root` / (no password)                | `root` / (your home password)            |
+| **DB Credentials**       | `root` / (no password)                | `root` / `root`                          |
 
 ---
 
@@ -62,7 +62,7 @@ spring.jpa.database-platform=org.hibernate.dialect.MySQL8Dialect
 spring.datasource.url=jdbc:mysql://localhost:3306/lostlink_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
 spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
 spring.datasource.username=root
-spring.datasource.password=YOUR_HOME_PASSWORD_HERE
+spring.datasource.password=root
 
 spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
 ```
@@ -174,4 +174,4 @@ When the user says they are developing in a specific environment, apply all chan
 
 ## Current State
 
-**As of Phase 1 (March 7, 2026):** The codebase is currently configured for the **🏫 Lab** environment.
+**As of Phase 1 (March 7, 2026):** The codebase is currently configured for the **🏠 Home** environment.

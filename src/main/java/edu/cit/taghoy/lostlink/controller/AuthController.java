@@ -5,7 +5,7 @@ import edu.cit.taghoy.lostlink.dto.LoginRequest;
 import edu.cit.taghoy.lostlink.dto.RegisterRequest;
 import edu.cit.taghoy.lostlink.model.User;
 import edu.cit.taghoy.lostlink.service.AuthService;
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
