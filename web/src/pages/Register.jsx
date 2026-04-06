@@ -1,9 +1,29 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { registerUser } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
+/**
+ * Registration Page Component
+ *
+ * **Design Pattern: Facade (Structural)**
+ *
+ * Registration logic is delegated to the AuthService facade (accessed via
+ * useAuth().register()). The component no longer makes direct API calls or
+ * parses error responses inline — the Facade handles all that complexity
+ * and returns a clean result object.
+ *
+ * Before refactoring:
+ *   - Called registerUser() from the API module directly
+ *   - Parsed error.response.data with nested conditionals
+ *   - Handled validation errors (VALID-001) and server errors separately
+ *
+ * After refactoring:
+ *   - Calls auth.register() — returns { success, error?, fieldErrors? }
+ *   - Error parsing logic is centralized in the AuthService facade
+ */
 function Register() {
   const navigate = useNavigate();
+  const auth = useAuth();
   const [form, setForm] = useState({
     studentId: '',
     email: '',
@@ -31,24 +51,19 @@ function Register() {
     setSuccess('');
     setLoading(true);
 
-    try {
-      const res = await registerUser(form);
-      if (res.data.success) {
-        setSuccess('Registration successful! Redirecting to login...');
-        setTimeout(() => navigate('/login'), 1500);
-      }
-    } catch (err) {
-      const data = err.response?.data;
-      if (data?.error?.code === 'VALID-001' && typeof data.error.details === 'object') {
-        setFieldErrors(data.error.details);
-      } else if (data?.error?.message) {
-        setError(data.error.details || data.error.message);
-      } else {
-        setError('Registration failed. Please try again.');
-      }
-    } finally {
-      setLoading(false);
+    // Facade: single method call replaces direct API call + error parsing
+    const result = await auth.register(form);
+
+    if (result.success) {
+      setSuccess('Registration successful! Redirecting to login...');
+      setTimeout(() => navigate('/login'), 1500);
+    } else if (result.fieldErrors) {
+      setFieldErrors(result.fieldErrors);
+    } else {
+      setError(result.error);
     }
+
+    setLoading(false);
   };
 
   return (
