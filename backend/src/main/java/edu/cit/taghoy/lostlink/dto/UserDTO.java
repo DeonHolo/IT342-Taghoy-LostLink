@@ -1,6 +1,7 @@
 package edu.cit.taghoy.lostlink.dto;
 
 import edu.cit.taghoy.lostlink.model.User;
+import edu.cit.taghoy.lostlink.util.ContactPreferenceCodec;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,25 +22,29 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UserDTO {
 
+    private Long id;
     private String studentId;
     private String email;
     private String firstName;
     private String lastName;
+    /** Encoded storage (platform|||details); kept for backward compatibility. */
+    private String contactPreference;
+    private String contactPlatform;
+    private String contactDetails;
     private String role;
 
-    /**
-     * Factory method that uses the Builder to construct a UserDTO from a JPA User entity.
-     *
-     * @param user the JPA User entity
-     * @return a fully populated UserDTO
-     */
     public static UserDTO fromEntity(User user) {
+        String[] parts = ContactPreferenceCodec.decode(user.getContactPreference());
         return UserDTO.builder()
+                .id(user.getId())
                 .studentId(user.getStudentId())
                 .email(user.getEmail())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
-                .role(user.getRole())
+                .contactPreference(user.getContactPreference())
+                .contactPlatform(parts[0])
+                .contactDetails(parts[1])
+                .role(user.getRoleName())
                 .build();
     }
 }

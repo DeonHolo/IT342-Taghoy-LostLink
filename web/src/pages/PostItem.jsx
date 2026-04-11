@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import ItemService from '../services/ItemService';
 import CategoryService from '../services/CategoryService';
+import { getProfile, updateProfile } from '../services/api';
 import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlineOutlined';
@@ -22,7 +23,8 @@ export default function PostItem() {
     status: 'LOST',
     currentStatus: '',
     dropoffLocation: '',
-    contactPreference: '',
+    contactPlatform: '',
+    contactDetails: '',
   });
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -35,6 +37,27 @@ export default function PostItem() {
     CategoryService.getAll()
       .then((data) => setCategories(data.data || data || []))
       .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await getProfile();
+        const p = res.data?.data;
+        if (!p || cancelled) return;
+        setForm((f) => ({
+          ...f,
+          contactPlatform: p.contactPlatform ?? f.contactPlatform,
+          contactDetails: p.contactDetails ?? f.contactDetails,
+        }));
+      } catch {
+        /* guest or network */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleChange = (e) => {
@@ -90,8 +113,13 @@ export default function PostItem() {
       errs.dropoffLocation = 'Specify where the item was surrendered.';
     }
 
-    if (form.currentStatus === 'HOLDING' && !form.contactPreference.trim()) {
-      errs.contactPreference = 'Provide your contact info.';
+    if (form.currentStatus === 'HOLDING') {
+      if (!form.contactPlatform.trim()) {
+        errs.contactPlatform = 'Choose or enter a platform (e.g. MS Teams, Phone).';
+      }
+      if (!form.contactDetails.trim()) {
+        errs.contactDetails = 'Enter your contact details (ID, number, etc.).';
+      }
     }
 
     return errs;
@@ -109,29 +137,47 @@ export default function PostItem() {
     setError('');
 
     try {
-      const formData = new FormData();
-      formData.append('title', form.title.trim());
-      formData.append('description', form.description.trim());
-      formData.append('location', form.location.trim());
-      formData.append('categoryId', form.categoryId);
-      formData.append('status', form.status);
-      formData.append('currentStatus', form.currentStatus);
+      const payload = {
+        title: form.title.trim(),
+        description: form.description.trim(),
+        location: form.location.trim(),
+        categoryId: Number(form.categoryId),
+        status: form.status,
+        currentStatus: form.currentStatus,
+      };
 
       if (form.currentStatus === 'SURRENDERED') {
-        formData.append('dropoffLocation', form.dropoffLocation.trim());
+        payload.dropoffLocation = form.dropoffLocation.trim();
       }
       if (form.currentStatus === 'HOLDING') {
-        formData.append('contactPreference', form.contactPreference.trim());
-      }
-      if (image) {
-        formData.append('image', image);
+        payload.contactPlatform = form.contactPlatform.trim();
+        payload.contactDetails = form.contactDetails.trim();
       }
 
-      await ItemService.createItem(formData);
+      const res = await ItemService.createItem(payload);
+      const created = res?.data ?? res;
+      const newId = created?.id;
+
+      if (image && newId) {
+        await ItemService.uploadImage(newId, image);
+      }
+
+      if (form.currentStatus === 'HOLDING') {
+        try {
+          await updateProfile({
+            contactPlatform: form.contactPlatform.trim(),
+            contactDetails: form.contactDetails.trim(),
+          });
+        } catch {
+          /* item already created; profile sync is best-effort */
+        }
+      }
+
       setSuccess(true);
       setTimeout(() => navigate('/feed'), 1500);
     } catch (err) {
       const msg =
+        err.response?.data?.error?.details ||
         err.response?.data?.error?.message ||
         err.response?.data?.error?.details?.image ||
         'Failed to post item. Please try again.';
@@ -264,7 +310,7 @@ export default function PostItem() {
                 name="location"
                 value={form.location}
                 onChange={handleChange}
-                placeholder="e.g. 3rd Floor Library"
+                placeholder="3rd Floor RTL"
                 className={inputClass('location')}
               />
               {fieldErrors.location && (
@@ -351,23 +397,53 @@ export default function PostItem() {
           )}
 
           {form.currentStatus === 'HOLDING' && (
-            <div className="space-y-1.5 animate-fade-in-up">
-              <label htmlFor="contactPreference" className="block text-sm font-medium text-zinc-700">
-                Contact Preference
-              </label>
-              <input
-                id="contactPreference"
-                name="contactPreference"
-                value={form.contactPreference}
-                onChange={handleChange}
-                placeholder="e.g. MS Teams: @your.name, Phone: 09XX-XXX-XXXX"
-                className={inputClass('contactPreference')}
-              />
-              {fieldErrors.contactPreference && (
-                <p className="text-xs text-maroon-600">
-                  {fieldErrors.contactPreference}
-                </p>
-              )}
+            <div className="space-y-3 animate-fade-in-up">
+              <p className="text-xs text-zinc-500">
+                Pulled from your profile when available. Saving here updates your profile too.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label htmlFor="contactPlatform" className="block text-sm font-medium text-zinc-700">
+                    Platform
+                  </label>
+                  <input
+                    id="contactPlatform"
+                    name="contactPlatform"
+                    value={form.contactPlatform}
+                    onChange={handleChange}
+                    placeholder="e.g. MS Teams, Facebook, Phone"
+                    className={inputClass('contactPlatform')}
+                    list="contact-platform-suggestions"
+                  />
+                  <datalist id="contact-platform-suggestions">
+                    <option value="MS Teams" />
+                    <option value="Facebook" />
+                    <option value="Messenger" />
+                    <option value="Phone" />
+                    <option value="Email" />
+                    <option value="Instagram" />
+                  </datalist>
+                  {fieldErrors.contactPlatform && (
+                    <p className="text-xs text-maroon-600">{fieldErrors.contactPlatform}</p>
+                  )}
+                </div>
+                <div className="space-y-1.5">
+                  <label htmlFor="contactDetails" className="block text-sm font-medium text-zinc-700">
+                    Details
+                  </label>
+                  <input
+                    id="contactDetails"
+                    name="contactDetails"
+                    value={form.contactDetails}
+                    onChange={handleChange}
+                    placeholder="e.g. @your.name, 09XX-XXX-XXXX"
+                    className={inputClass('contactDetails')}
+                  />
+                  {fieldErrors.contactDetails && (
+                    <p className="text-xs text-maroon-600">{fieldErrors.contactDetails}</p>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 

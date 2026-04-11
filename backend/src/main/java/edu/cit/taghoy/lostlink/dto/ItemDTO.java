@@ -1,6 +1,7 @@
 package edu.cit.taghoy.lostlink.dto;
 
 import edu.cit.taghoy.lostlink.model.Item;
+import edu.cit.taghoy.lostlink.util.ContactPreferenceCodec;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,6 +30,8 @@ public class ItemDTO {
     private String location;
     private String dropoffLocation;
     private String contactPreference;
+    private String contactPlatform;
+    private String contactDetails;
     private String imageUrl;
     private List<String> aiTags;
     private String categoryName;
@@ -42,11 +45,20 @@ public class ItemDTO {
      * Factory method to construct an ItemDTO from a JPA Item entity.
      * Sensitive fields (contactPreference, dropoffLocation) can be nulled based on reveal status.
      */
+    public static ItemDTO fromEntity(Item item) {
+        return fromEntity(item, false);
+    }
+
     public static ItemDTO fromEntity(Item item, boolean hideSensitiveInfo) {
         List<String> tagList = Collections.emptyList();
         if (item.getAiTags() != null && !item.getAiTags().isBlank()) {
             tagList = Arrays.asList(item.getAiTags().split(","));
         }
+
+        String rawContact = hideSensitiveInfo ? null : item.getContactPreference();
+        String[] contactParts = rawContact != null
+                ? ContactPreferenceCodec.decode(rawContact)
+                : new String[] { null, null };
 
         return ItemDTO.builder()
                 .id(item.getId())
@@ -56,7 +68,9 @@ public class ItemDTO {
                 .currentStatus(item.getCurrentStatus())
                 .location(item.getLocation())
                 .dropoffLocation(hideSensitiveInfo ? null : item.getDropoffLocation())
-                .contactPreference(hideSensitiveInfo ? null : item.getContactPreference())
+                .contactPreference(rawContact)
+                .contactPlatform(contactParts[0])
+                .contactDetails(contactParts[1])
                 .imageUrl(item.getImageUrl())
                 .aiTags(tagList)
                 .categoryName(item.getCategory() != null ? item.getCategory().getName() : null)

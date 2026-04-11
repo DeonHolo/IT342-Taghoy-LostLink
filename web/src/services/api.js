@@ -16,7 +16,8 @@ import axios from 'axios';
  * - Single point of configuration (timeouts, CORS, etc.)
  */
 const API = axios.create({
-  baseURL: 'http://localhost:8080/api',
+  // Dev: Vite proxies /api → backend (see vite.config.js). Prod: set VITE_API_BASE_URL if needed.
+  baseURL: import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.DEV ? '/api' : 'http://localhost:8080/api'),
   headers: { 'Content-Type': 'application/json' },
   timeout: 30000, // 30 second timeout matching the mobile client
 });
@@ -66,5 +67,16 @@ API.interceptors.response.use(
 export const registerUser = (data) => API.post('/auth/register', data);
 export const loginUser = (data) => API.post('/auth/login', data);
 export const googleLogin = (token) => API.post('/auth/google', { token });
+
+export const getProfile = () => API.get('/users/profile');
+export const updateProfile = (data) => API.put('/users/profile', data);
+export const getActivity = () => API.get('/users/activity');
+
+export const adminGetUsers = () => API.get('/admin/users');
+export const adminUpdateRole = (userId, roleName) => API.put(`/admin/users/${userId}/role`, { roleName });
+export const adminDeleteUser = (userId) => API.delete(`/admin/users/${userId}`);
+export const adminGetItems = () => API.get('/admin/items');
+export const adminDeleteItem = (itemId) => API.delete(`/admin/items/${itemId}`);
+export const adminGetStats = () => API.get('/admin/stats');
 
 export default API;

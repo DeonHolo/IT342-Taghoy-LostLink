@@ -33,16 +33,15 @@ public class User {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
-    /** Google account subject (`sub` claim); links OAuth logins to this user. */
     @Column(name = "google_sub", unique = true, length = 255)
     private String googleSub;
 
     @Column(name = "contact_preference")
     private String contactPreference;
 
-    // Simplified for Phase 1: storing role as a string instead of a separate table
-    @Column(nullable = false)
-    private String role = "USER";
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id", nullable = false)
+    private Role role;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -50,5 +49,13 @@ public class User {
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
+    }
+
+    /**
+     * Convenience accessor that returns the role name string (e.g. "USER", "ADMIN").
+     * Used by security and DTO layers so they don't need to know about the Role entity.
+     */
+    public String getRoleName() {
+        return role != null ? role.getRoleName() : "USER";
     }
 }

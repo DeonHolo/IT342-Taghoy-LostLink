@@ -28,8 +28,11 @@ public class ItemRequest {
     /** Required if currentStatus is SURRENDERED */
     private String dropoffLocation;
 
-    /** Required if currentStatus is HOLDING */
+    /** Required if currentStatus is HOLDING (legacy or combined with platform/details). */
     private String contactPreference;
+
+    private String contactPlatform;
+    private String contactDetails;
 
     @NotNull(message = "Category is required.")
     private Long categoryId;

@@ -14,6 +14,9 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     List<Item> findByUserOrderByCreatedAtDesc(User user);
 
+    /** Items posted by user id (explicit association path; avoids ambiguous query derivation). */
+    List<Item> findByUser_IdOrderByCreatedAtDesc(Long userId);
+
     List<Item> findAllByOrderByCreatedAtDesc();
 
     @Query("SELECT i FROM Item i WHERE i.status <> 'RESOLVED' ORDER BY i.createdAt DESC")

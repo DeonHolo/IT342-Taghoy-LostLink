@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar';
 import LoginModal from '../components/LoginModal';
 import { useAuth } from '../context/AuthContext';
 import ItemService from '../services/ItemService';
+import { formatContactLine } from '../utils/contactPreference';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
@@ -132,6 +133,12 @@ export default function ItemDetail() {
   }
 
   const isLost = item?.status === 'LOST';
+
+  const contactDisplayText = formatContactLine(
+    revealData?.contactPlatform ?? item?.contactPlatform,
+    revealData?.contactDetails ?? item?.contactDetails,
+    revealData?.contactPreference ?? item?.contactPreference
+  );
 
   return (
     <div className="min-h-[100dvh] bg-stone-50">
@@ -274,16 +281,16 @@ export default function ItemDetail() {
                     </span>
                   </div>
                   <div className="space-y-2 text-sm text-zinc-700">
-                    {item.contactPreference && (
+                    {contactDisplayText && (
                       <p>
                         <span className="font-medium">Contact:</span>{' '}
-                        {item.contactPreference}
+                        {contactDisplayText}
                       </p>
                     )}
-                    {item.dropoffLocation && (
+                    {(revealData?.dropoffLocation ?? item?.dropoffLocation) && (
                       <p>
                         <span className="font-medium">Drop-off:</span>{' '}
-                        {item.dropoffLocation}
+                        {revealData?.dropoffLocation ?? item?.dropoffLocation}
                       </p>
                     )}
                     {revealData?.email && (

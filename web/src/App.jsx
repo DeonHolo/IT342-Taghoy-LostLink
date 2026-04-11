@@ -8,19 +8,9 @@ import PostItem from './pages/PostItem';
 import ItemDetail from './pages/ItemDetail';
 import EditItem from './pages/EditItem';
 import MyPosts from './pages/MyPosts';
+import Profile from './pages/Profile';
+import AdminDashboard from './pages/AdminDashboard';
 
-/**
- * Application Root Component
- *
- * Routes:
- *  /feed          — Public feed (main page)
- *  /items/:id     — Item detail (public, but reveal requires auth)
- *  /post          — Post new item (protected)
- *  /items/:id/edit — Edit item (protected)
- *  /my-posts      — User's own posts (protected)
- *  /login         — Login page
- *  /register      — Register page
- */
 function App() {
   return (
     <AuthProvider>
@@ -55,7 +45,22 @@ function App() {
               </ProtectedRoute>
             }
           />
-          {/* Legacy dashboard redirect */}
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/dashboard" element={<Navigate to="/feed" replace />} />
         </Routes>
       </BrowserRouter>

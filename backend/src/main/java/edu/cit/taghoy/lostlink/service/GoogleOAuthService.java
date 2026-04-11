@@ -4,7 +4,9 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
+import edu.cit.taghoy.lostlink.model.Role;
 import edu.cit.taghoy.lostlink.model.User;
+import edu.cit.taghoy.lostlink.repository.RoleRepository;
 import edu.cit.taghoy.lostlink.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,22 +23,22 @@ import java.util.UUID;
 public class GoogleOAuthService {
 
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final String googleClientId;
 
     public GoogleOAuthService(
             UserRepository userRepository,
+            RoleRepository roleRepository,
             PasswordEncoder passwordEncoder,
             @Value("${lostlink.google.oauth.client-id:}") String googleClientId
     ) {
         this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.googleClientId = googleClientId;
     }
 
-    /**
-     * Verifies the Google ID token and returns an existing or newly created user.
-     */
     public Optional<User> authenticateWithGoogleIdToken(String idTokenString)
             throws GeneralSecurityException, IOException {
 
@@ -97,6 +99,9 @@ public class GoogleOAuthService {
             return Optional.of(userRepository.save(u));
         }
 
+        Role userRole = roleRepository.findByRoleName("USER")
+                .orElseThrow(() -> new IllegalStateException("Default USER role not found."));
+
         User user = new User();
         user.setStudentId(null);
         user.setEmail(email);
@@ -104,7 +109,7 @@ public class GoogleOAuthService {
         user.setLastName(lastName);
         user.setGoogleSub(sub);
         user.setPasswordHash(passwordEncoder.encode(UUID.randomUUID().toString()));
-        user.setRole("USER");
+        user.setRole(userRole);
 
         return Optional.of(userRepository.save(user));
     }

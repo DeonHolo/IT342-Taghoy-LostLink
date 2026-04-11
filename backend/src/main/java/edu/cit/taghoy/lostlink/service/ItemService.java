@@ -2,6 +2,7 @@ package edu.cit.taghoy.lostlink.service;
 
 import edu.cit.taghoy.lostlink.dto.ItemDTO;
 import edu.cit.taghoy.lostlink.dto.ItemRequest;
+import edu.cit.taghoy.lostlink.util.ContactPreferenceCodec;
 import edu.cit.taghoy.lostlink.model.Category;
 import edu.cit.taghoy.lostlink.model.Claim;
 import edu.cit.taghoy.lostlink.model.Item;
@@ -10,6 +11,7 @@ import edu.cit.taghoy.lostlink.repository.CategoryRepository;
 import edu.cit.taghoy.lostlink.repository.ClaimRepository;
 import edu.cit.taghoy.lostlink.repository.ItemRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -109,6 +111,8 @@ public class ItemService {
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new IllegalArgumentException("Category not found."));
 
+        validateHoldingContact(request);
+
         Item item = new Item();
         item.setTitle(request.getTitle());
         item.setDescription(request.getDescription());
@@ -116,7 +120,7 @@ public class ItemService {
         item.setCurrentStatus(request.getCurrentStatus());
         item.setLocation(request.getLocation());
         item.setDropoffLocation(request.getDropoffLocation());
-        item.setContactPreference(request.getContactPreference());
+        item.setContactPreference(resolveContactPreference(request));
         item.setCategory(category);
         item.setUser(user);
 
@@ -137,16 +141,41 @@ public class ItemService {
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new IllegalArgumentException("Category not found."));
 
+        validateHoldingContact(request);
+
         item.setTitle(request.getTitle());
         item.setDescription(request.getDescription());
         item.setStatus(request.getStatus().toUpperCase());
         item.setCurrentStatus(request.getCurrentStatus());
         item.setLocation(request.getLocation());
         item.setDropoffLocation(request.getDropoffLocation());
-        item.setContactPreference(request.getContactPreference());
+        item.setContactPreference(resolveContactPreference(request));
         item.setCategory(category);
 
         return itemRepository.save(item);
+    }
+
+    private static void validateHoldingContact(ItemRequest request) {
+        if (request.getCurrentStatus() == null
+                || !"HOLDING".equalsIgnoreCase(request.getCurrentStatus())) {
+            return;
+        }
+        if (!StringUtils.hasText(resolveContactPreference(request))) {
+            throw new IllegalArgumentException(
+                    "Contact platform and details are required when holding an item.");
+        }
+    }
+
+    private static String resolveContactPreference(ItemRequest request) {
+        if (StringUtils.hasText(request.getContactPlatform())
+                || StringUtils.hasText(request.getContactDetails())) {
+            return ContactPreferenceCodec.encode(
+                    request.getContactPlatform(), request.getContactDetails());
+        }
+        if (StringUtils.hasText(request.getContactPreference())) {
+            return request.getContactPreference().trim();
+        }
+        return null;
     }
 
     /**

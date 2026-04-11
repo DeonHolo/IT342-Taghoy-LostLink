@@ -9,6 +9,7 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutlineOutlined';
+import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined';
 
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -69,6 +70,12 @@ export default function Navbar() {
                   <ListAltIcon sx={{ fontSize: 18 }} />
                   My Posts
                 </Link>
+                {user?.role === 'ADMIN' && (
+                  <Link to="/admin" className={navLinkClass('/admin')}>
+                    <AdminPanelSettingsOutlinedIcon sx={{ fontSize: 18 }} />
+                    Admin
+                  </Link>
+                )}
               </>
             )}
           </div>
@@ -76,14 +83,17 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             {isAuthenticated ? (
               <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10">
+                <Link
+                  to="/profile"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 transition-all duration-200"
+                >
                   <div className="w-7 h-7 rounded-full bg-gold-500/20 border border-gold-500/40 flex items-center justify-center">
                     <PersonOutlineIcon sx={{ fontSize: 16, color: '#e6bb3a' }} />
                   </div>
                   <span className="text-sm font-medium text-maroon-100">
                     {user?.firstName || 'User'}
                   </span>
-                </div>
+                </Link>
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-maroon-200 hover:bg-white/10 hover:text-white transition-all duration-200 cursor-pointer"
@@ -152,16 +162,30 @@ export default function Navbar() {
                     <ListAltIcon sx={{ fontSize: 18 }} />
                     My Posts
                   </Link>
+                  {user?.role === 'ADMIN' && (
+                    <Link
+                      to="/admin"
+                      onClick={() => setMobileOpen(false)}
+                      className={navLinkClass('/admin')}
+                    >
+                      <AdminPanelSettingsOutlinedIcon sx={{ fontSize: 18 }} />
+                      Admin
+                    </Link>
+                  )}
                 </>
               )}
 
               <div className="border-t border-white/10 mt-2 pt-2">
                 {isAuthenticated ? (
                   <>
-                    <div className="flex items-center gap-2 px-3 py-2 text-sm text-maroon-100">
+                    <Link
+                      to="/profile"
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2 text-sm text-maroon-100 hover:bg-white/10 rounded-lg transition-all"
+                    >
                       <PersonOutlineIcon sx={{ fontSize: 18, color: '#e6bb3a' }} />
                       {user?.firstName} {user?.lastName}
-                    </div>
+                    </Link>
                     <button
                       onClick={handleLogout}
                       className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm font-medium text-maroon-200 hover:bg-white/10 hover:text-white transition-all cursor-pointer"
