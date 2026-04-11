@@ -88,4 +88,33 @@ public class AuthController {
                 .body(ApiResponse.error("AUTH-001", "Invalid credentials",
                         "Student ID, Email, or password is incorrect."));
     }
+
+    /**
+     * GET /api/auth/me
+     *
+     * Returns the profile of the currently authenticated user.
+     */
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<Object>> getCurrentUser() {
+        org.springframework.security.core.Authentication auth =
+                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth != null && auth.getPrincipal() instanceof CustomUserDetails) {
+            User user = ((CustomUserDetails) auth.getPrincipal()).getUser();
+            return ResponseEntity.ok(ApiResponse.ok(UserDTO.fromEntity(user)));
+        }
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error("AUTH-001", "Not authenticated", "No valid session found."));
+    }
+
+    /**
+     * POST /api/auth/logout
+     *
+     * Client-side logout — instructs the client to discard the token.
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Object>> logout() {
+        return ResponseEntity.ok(ApiResponse.ok(java.util.Map.of("message", "Successfully logged out.")));
+    }
 }

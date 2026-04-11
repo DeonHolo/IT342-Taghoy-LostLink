@@ -1,27 +1,13 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import Alert from '@mui/material/Alert';
+import SearchIcon from '@mui/icons-material/Search';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
-/**
- * Registration Page Component
- *
- * **Design Pattern: Facade (Structural)**
- *
- * Registration logic is delegated to the AuthService facade (accessed via
- * useAuth().register()). The component no longer makes direct API calls or
- * parses error responses inline — the Facade handles all that complexity
- * and returns a clean result object.
- *
- * Before refactoring:
- *   - Called registerUser() from the API module directly
- *   - Parsed error.response.data with nested conditionals
- *   - Handled validation errors (VALID-001) and server errors separately
- *
- * After refactoring:
- *   - Calls auth.register() — returns { success, error?, fieldErrors? }
- *   - Error parsing logic is centralized in the AuthService facade
- */
-function Register() {
+export default function Register() {
   const navigate = useNavigate();
   const auth = useAuth();
   const [form, setForm] = useState({
@@ -38,7 +24,6 @@ function Register() {
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-    // Clear field-specific error on change
     if (fieldErrors[e.target.name]) {
       setFieldErrors({ ...fieldErrors, [e.target.name]: '' });
     }
@@ -51,9 +36,7 @@ function Register() {
     setSuccess('');
     setLoading(true);
 
-    // Facade: single method call replaces direct API call + error parsing
     const result = await auth.register(form);
-
     if (result.success) {
       setSuccess('Registration successful! Redirecting to login...');
       setTimeout(() => navigate('/login'), 1500);
@@ -62,102 +45,141 @@ function Register() {
     } else {
       setError(result.error);
     }
-
     setLoading(false);
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <h1 className="auth-title">Create Account</h1>
-        <p className="auth-subtitle">Join LostLink to report and find lost items on campus</p>
+    <div className="min-h-screen flex bg-[var(--color-bg)]">
+      {/* Left — Branding Panel */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[var(--color-primary-dark)] via-[var(--color-primary)] to-[var(--color-primary-light)] text-white flex-col justify-center px-16 relative overflow-hidden">
+        <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-white/5" />
+        <div className="absolute -bottom-32 -left-16 w-80 h-80 rounded-full bg-white/5" />
 
-        {error && <div className="alert alert-error">{error}</div>}
-        {success && <div className="alert alert-success">{success}</div>}
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
+              <SearchIcon sx={{ color: 'white', fontSize: 28 }} />
+            </div>
+            <span className="text-3xl font-bold tracking-tight">LostLink</span>
+          </div>
+          <h1 className="text-4xl font-bold leading-tight mb-4">
+            Join the campus<br />community.
+          </h1>
+          <p className="text-blue-100 text-lg max-w-md">
+            Help fellow students find their lost items. Report, browse, and connect through LostLink.
+          </p>
+        </div>
+      </div>
 
-        <form onSubmit={handleSubmit} className="auth-form">
-          <div className="form-group">
-            <label htmlFor="studentId">Student ID</label>
-            <input
-              id="studentId"
+      {/* Right — Form */}
+      <div className="flex-1 flex items-center justify-center px-6 py-12">
+        <div className="w-full max-w-md">
+          <div className="lg:hidden flex items-center gap-2 mb-8">
+            <div className="w-8 h-8 rounded-lg bg-[var(--color-primary)] flex items-center justify-center">
+              <SearchIcon sx={{ color: 'white', fontSize: 18 }} />
+            </div>
+            <span className="text-xl font-bold text-[var(--color-primary-dark)]">
+              Lost<span className="text-[var(--color-primary)]">Link</span>
+            </span>
+          </div>
+
+          <h2 className="text-2xl font-bold text-[var(--color-text)]">Create Account</h2>
+          <p className="text-sm text-[var(--color-text-muted)] mt-1 mb-6">
+            Join LostLink to report and find lost items on campus.
+          </p>
+
+          {error && <Alert severity="error" sx={{ mb: 3, borderRadius: '12px' }}>{error}</Alert>}
+          {success && <Alert severity="success" sx={{ mb: 3, borderRadius: '12px' }} icon={<CheckCircleIcon />}>{success}</Alert>}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <TextField
+              label="Student ID"
               name="studentId"
-              type="text"
-              placeholder="XX-XXXX-XXX"
               value={form.studentId}
               onChange={handleChange}
+              fullWidth
               required
+              placeholder="XX-XXXX-XXX"
+              size="small"
+              error={!!fieldErrors.studentId}
+              helperText={fieldErrors.studentId}
             />
-            {fieldErrors.studentId && <span className="field-error">{fieldErrors.studentId}</span>}
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="firstName">First Name</label>
-              <input
-                id="firstName"
+            <div className="grid grid-cols-2 gap-3">
+              <TextField
+                label="First Name"
                 name="firstName"
-                type="text"
-                placeholder="Ron Luigi"
                 value={form.firstName}
                 onChange={handleChange}
+                fullWidth
                 required
+                size="small"
+                error={!!fieldErrors.firstName}
+                helperText={fieldErrors.firstName}
               />
-              {fieldErrors.firstName && <span className="field-error">{fieldErrors.firstName}</span>}
-            </div>
-            <div className="form-group">
-              <label htmlFor="lastName">Last Name</label>
-              <input
-                id="lastName"
+              <TextField
+                label="Last Name"
                 name="lastName"
-                type="text"
-                placeholder="Taghoy"
                 value={form.lastName}
                 onChange={handleChange}
+                fullWidth
                 required
+                size="small"
+                error={!!fieldErrors.lastName}
+                helperText={fieldErrors.lastName}
               />
-              {fieldErrors.lastName && <span className="field-error">{fieldErrors.lastName}</span>}
             </div>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
-            <input
-              id="email"
+            <TextField
+              label="Email"
               name="email"
               type="email"
-              placeholder="you@cit.edu"
               value={form.email}
               onChange={handleChange}
+              fullWidth
               required
+              placeholder="you@cit.edu"
+              size="small"
+              error={!!fieldErrors.email}
+              helperText={fieldErrors.email}
             />
-            {fieldErrors.email && <span className="field-error">{fieldErrors.email}</span>}
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              id="password"
+            <TextField
+              label="Password"
               name="password"
               type="password"
-              placeholder="Minimum 8 characters"
               value={form.password}
               onChange={handleChange}
+              fullWidth
               required
+              placeholder="Minimum 8 characters"
+              size="small"
+              error={!!fieldErrors.password}
+              helperText={fieldErrors.password}
             />
-            {fieldErrors.password && <span className="field-error">{fieldErrors.password}</span>}
-          </div>
+            <Button
+              type="submit"
+              variant="contained"
+              fullWidth
+              disabled={loading}
+              size="large"
+              sx={{
+                bgcolor: 'var(--color-primary)',
+                '&:hover': { bgcolor: 'var(--color-primary-dark)' },
+                py: 1.5,
+                mt: 1,
+                boxShadow: '0 4px 14px rgba(26,86,219,0.3)',
+              }}
+            >
+              {loading ? 'Creating Account...' : 'Register'}
+            </Button>
+          </form>
 
-          <button type="submit" className="btn btn-primary" disabled={loading}>
-            {loading ? 'Creating Account...' : 'Register'}
-          </button>
-        </form>
-
-        <p className="auth-footer">
-          Already have an account? <Link to="/login">Log in</Link>
-        </p>
+          <p className="text-center text-sm text-[var(--color-text-muted)] mt-6">
+            Already have an account?{' '}
+            <Link to="/login" className="text-[var(--color-primary)] font-semibold hover:underline">
+              Log in
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );
 }
-
-export default Register;

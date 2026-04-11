@@ -1,0 +1,42 @@
+package edu.cit.taghoy.lostlink.repository;
+
+import edu.cit.taghoy.lostlink.model.Item;
+import edu.cit.taghoy.lostlink.model.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface ItemRepository extends JpaRepository<Item, Long> {
+
+    List<Item> findByUserOrderByCreatedAtDesc(User user);
+
+    List<Item> findAllByOrderByCreatedAtDesc();
+
+    @Query("SELECT i FROM Item i WHERE i.status <> 'RESOLVED' ORDER BY i.createdAt DESC")
+    List<Item> findAllActive();
+
+    @Query("SELECT i FROM Item i WHERE i.status <> 'RESOLVED' AND i.status = :status ORDER BY i.createdAt DESC")
+    List<Item> findAllActiveByStatus(@Param("status") String status);
+
+    @Query("SELECT i FROM Item i WHERE i.status <> 'RESOLVED' AND " +
+           "(LOWER(i.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(i.description) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(i.aiTags) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+           "ORDER BY i.createdAt DESC")
+    List<Item> searchByKeyword(@Param("keyword") String keyword);
+
+    @Query("SELECT i FROM Item i WHERE i.status <> 'RESOLVED' AND " +
+           "(LOWER(i.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(i.description) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(i.aiTags) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
+           "i.status = :status " +
+           "ORDER BY i.createdAt DESC")
+    List<Item> searchByKeywordAndStatus(@Param("keyword") String keyword, @Param("status") String status);
+
+    @Query("SELECT i FROM Item i WHERE i.status <> 'RESOLVED' AND i.category.id = :categoryId ORDER BY i.createdAt DESC")
+    List<Item> findAllActiveByCategoryId(@Param("categoryId") Long categoryId);
+}
