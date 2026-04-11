@@ -6,6 +6,8 @@ import edu.cit.taghoy.lostlink.dto.LoginRequest;
 import edu.cit.taghoy.lostlink.dto.RegisterRequest;
 import edu.cit.taghoy.lostlink.dto.UserDTO;
 import edu.cit.taghoy.lostlink.model.User;
+import edu.cit.taghoy.lostlink.security.CustomUserDetails;
+import edu.cit.taghoy.lostlink.security.JwtService;
 import edu.cit.taghoy.lostlink.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -29,9 +31,11 @@ import java.util.Optional;
 public class AuthController {
 
     private final AuthService authService;
+    private final JwtService jwtService;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, JwtService jwtService) {
         this.authService = authService;
+        this.jwtService = jwtService;
     }
 
     /**
@@ -43,21 +47,18 @@ public class AuthController {
      */
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<Object>> register(@Valid @RequestBody RegisterRequest request) {
-        try {
-            User user = authService.register(request);
+        // Validation for duplicate entries is now handled globally via DataIntegrityViolationException
+        User user = authService.register(request);
 
-            // Builder pattern: fluent, type-safe response construction
-            AuthResponseData data = AuthResponseData.builder()
-                    .user(UserDTO.fromEntity(user))
-                    .accessToken("phase1-placeholder-token")
-                    .build();
+        String jwtToken = jwtService.generateToken(new CustomUserDetails(user));
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(data));
+        // Builder pattern: fluent, type-safe response construction
+        AuthResponseData data = AuthResponseData.builder()
+                .user(UserDTO.fromEntity(user))
+                .accessToken(jwtToken)
+                .build();
 
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(ApiResponse.error("DB-002", "Duplicate entry", e.getMessage()));
-        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(data));
     }
 
     /**
@@ -72,11 +73,12 @@ public class AuthController {
 
         if (userOpt.isPresent()) {
             User user = userOpt.get();
+            String jwtToken = jwtService.generateToken(new CustomUserDetails(user));
 
             // Builder pattern: fluent, type-safe response construction
             AuthResponseData data = AuthResponseData.builder()
                     .user(UserDTO.fromEntity(user))
-                    .accessToken("phase1-placeholder-token")
+                    .accessToken(jwtToken)
                     .build();
 
             return ResponseEntity.ok(ApiResponse.ok(data));
