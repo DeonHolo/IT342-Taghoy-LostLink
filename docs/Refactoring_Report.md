@@ -4,7 +4,7 @@
 **Course / Subject:** IT342 — Systems Integration and Architecture 1  
 **Project Name:** LostLink  
 **Branch:** `feature/design-patterns-refactor`  
-**Date:** April 2026
+**Date:** April 6, 2026
 
 ---
 

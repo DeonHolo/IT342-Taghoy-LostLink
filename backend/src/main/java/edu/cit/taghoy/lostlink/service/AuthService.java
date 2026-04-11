@@ -25,15 +25,8 @@ public class AuthService {
      * Validates duplicate email/studentId and hashes the password with BCrypt.
      */
     public User register(RegisterRequest request) {
-        // Check for duplicate email
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("An account with this email already exists.");
-        }
-
-        // Check for duplicate Student ID
-        if (userRepository.existsByStudentId(request.getStudentId())) {
-            throw new IllegalArgumentException("An account with this Student ID already exists.");
-        }
+        // The unique constraints on the DB side will automatically throw DataIntegrityViolationException 
+        // if a duplicate email or student ID is registered, which our GlobalExceptionHandler will catch.
 
         User user = new User();
         user.setStudentId(request.getStudentId());
