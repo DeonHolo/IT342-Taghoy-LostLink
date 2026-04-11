@@ -1,9 +1,34 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { loginUser } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
+/**
+ * Login Page Component
+ *
+ * **Design Patterns Applied:**
+ *
+ * 1. **Facade (Structural)** — Login logic is delegated to the AuthService facade
+ *    (accessed indirectly via useAuth). The component no longer makes direct API
+ *    calls or manages localStorage — all that complexity is hidden behind
+ *    AuthService's simple interface.
+ *
+ * 2. **Observer (Behavioral)** — Uses the useAuth() hook to subscribe to auth
+ *    state changes. The login() function from AuthContext internally updates the
+ *    auth state, which causes all Observer components to re-render automatically.
+ *
+ * Before refactoring, this component directly:
+ *   - Called loginUser() from the API module
+ *   - Parsed error responses inline with multiple conditionals
+ *   - Managed localStorage reads/writes manually
+ *
+ * After refactoring:
+ *   - Calls auth.login() — a single, clean method from the AuthContext
+ *   - Error handling is returned as a simple { success, error } result
+ *   - No localStorage interaction at all
+ */
 function Login() {
   const navigate = useNavigate();
+  const auth = useAuth();
   const [form, setForm] = useState({ identifier: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -17,26 +42,16 @@ function Login() {
     setError('');
     setLoading(true);
 
-    try {
-      const res = await loginUser(form);
-      if (res.data.success) {
-        // Store user data for the dashboard
-        localStorage.setItem('user', JSON.stringify(res.data.data.user));
-        localStorage.setItem('token', res.data.data.accessToken);
-        navigate('/dashboard');
-      }
-    } catch (err) {
-      const data = err.response?.data;
-      if (data?.error?.details) {
-        setError(data.error.details);
-      } else if (data?.error?.message) {
-        setError(data.error.message);
-      } else {
-        setError('Login failed. Please check your credentials.');
-      }
-    } finally {
-      setLoading(false);
+    // Facade + Observer: single method call replaces API + localStorage + error parsing
+    const result = await auth.login(form);
+
+    if (result.success) {
+      navigate('/dashboard');
+    } else {
+      setError(result.error);
     }
+
+    setLoading(false);
   };
 
   return (

@@ -1,41 +1,62 @@
 package com.taghoy.lostlink
 
-import android.content.Intent
-import android.os.Bundle
 import android.util.Patterns
-import android.view.View
-import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
-import com.google.gson.Gson
-import com.taghoy.lostlink.api.ApiResponse
-import com.taghoy.lostlink.api.AuthData
+import android.widget.Button
+import android.widget.ProgressBar
+import android.widget.TextView
 import com.taghoy.lostlink.api.RegisterRequest
-import com.taghoy.lostlink.api.RetrofitClient
 import com.taghoy.lostlink.databinding.ActivityRegisterBinding
-import com.taghoy.lostlink.utils.SessionManager
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import com.taghoy.lostlink.repository.AuthResult
 
-class RegisterActivity : AppCompatActivity() {
+/**
+ * Registration screen Activity.
+ *
+ * **Design Patterns Applied:**
+ *
+ * 1. **Template Method (Behavioral)** — Extends [BaseAuthActivity] which defines
+ *    the algorithm skeleton for auth screens. This class overrides only the
+ *    variable steps: [initializeBinding], [setupListeners], [getProgressBar],
+ *    and [getErrorTextView]. Shared operations like setLoading(), showError(),
+ *    saveSessionAndNavigate(), and navigateToDashboard() are inherited from
+ *    the base class.
+ *
+ * 2. **Adapter (Structural)** — Uses [AuthRepository] (from [BaseAuthActivity])
+ *    which adapts Retrofit's complex Callback<ApiResponse<AuthData>> interface
+ *    into a simple sealed class: AuthResult.Success or AuthResult.Error.
+ *
+ * Before refactoring:
+ *   - Extended AppCompatActivity directly
+ *   - Duplicated setLoading(), showError() (identical to LoginActivity)
+ *   - Contained ~40 lines of Retrofit callback boilerplate with manual error parsing
+ *   - Duplicated navigateToDashboard() and session save logic
+ *
+ * After refactoring:
+ *   - Extends BaseAuthActivity (inherits all shared auth methods)
+ *   - Uses authRepository.register() with a clean sealed-class callback
+ *   - Total lines reduced from 207 to ~120
+ */
+class RegisterActivity : BaseAuthActivity() {
 
     private lateinit var binding: ActivityRegisterBinding
-    private lateinit var sessionManager: SessionManager
 
     // Regex matching the backend validation: XX-XXXX-XXX
     private val studentIdPattern = Regex("^\\d{2}-\\d{4}-\\d{3}$")
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    // ── Template Method: provide the specific ViewBinding ──
+
+    override fun initializeBinding() {
         binding = ActivityRegisterBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        sessionManager = SessionManager(this)
-
-        setupListeners()
     }
 
-    private fun setupListeners() {
+    // ── Template Method: return layout-specific views ──
+
+    override fun getProgressBar(): ProgressBar = binding.progressBar
+    override fun getErrorTextView(): TextView = binding.tvError
+
+    // ── Template Method: wire up form-specific listeners ──
+
+    override fun setupListeners() {
         binding.btnRegister.setOnClickListener {
             clearErrors()
             if (validateInputs()) {
@@ -47,6 +68,8 @@ class RegisterActivity : AppCompatActivity() {
             finish() // Go back to login
         }
     }
+
+    // ── Registration-specific logic ──
 
     private fun validateInputs(): Boolean {
         val studentId = binding.etStudentId.text.toString().trim()
@@ -116,9 +139,16 @@ class RegisterActivity : AppCompatActivity() {
         binding.tilLastName.error = null
         binding.tilPassword.error = null
         binding.tilConfirmPassword.error = null
-        binding.tvError.visibility = View.GONE
+        hideError()
     }
 
+    /**
+     * Perform registration using the Adapter (AuthRepository).
+     *
+     * The authRepository.register() call adapts the raw Retrofit callback
+     * into a clean AuthResult sealed class — replacing ~40 lines of
+     * callback boilerplate with ~8 lines.
+     */
     private fun performRegistration() {
         val studentId = binding.etStudentId.text.toString().trim()
         val email = binding.etEmail.text.toString().trim()
@@ -126,81 +156,26 @@ class RegisterActivity : AppCompatActivity() {
         val lastName = binding.etLastName.text.toString().trim()
         val password = binding.etPassword.text.toString()
 
-        setLoading(true)
+        // Template Method: shared loading state management
+        setLoading(true, binding.btnRegister, getString(R.string.loading), getString(R.string.btn_register))
 
         val request = RegisterRequest(studentId, email, firstName, lastName, password)
 
-        RetrofitClient.apiService.register(request).enqueue(object : Callback<ApiResponse<AuthData>> {
-            override fun onResponse(
-                call: Call<ApiResponse<AuthData>>,
-                response: Response<ApiResponse<AuthData>>
-            ) {
-                setLoading(false)
-
-                if (response.isSuccessful && response.body()?.success == true) {
-                    val data = response.body()?.data
-                    val user = data?.user
-
-                    // Save session (auto-login after registration per SDD AC-1a)
-                    sessionManager.saveSession(
-                        token = data?.accessToken ?: "",
-                        studentId = user?.studentId,
-                        email = user?.email,
-                        firstName = user?.firstName,
-                        lastName = user?.lastName,
-                        role = user?.role
-                    )
-
-                    Toast.makeText(
-                        this@RegisterActivity,
-                        "Account created successfully!",
-                        Toast.LENGTH_SHORT
-                    ).show()
-
-                    // Navigate to dashboard (auto-login per SDD)
-                    val intent = Intent(this@RegisterActivity, DashboardActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    startActivity(intent)
-                    finish()
-
-                } else {
-                    // Parse error from response body
-                    val errorBody = response.errorBody()?.string()
-                    val errorMsg = try {
-                        val errorResponse = Gson().fromJson(errorBody, ApiResponse::class.java)
-                        when {
-                            errorResponse.error?.details is Map<*, *> -> {
-                                // Validation errors — show the first one
-                                val details = errorResponse.error.details as Map<*, *>
-                                details.values.firstOrNull()?.toString() ?: "Validation failed"
-                            }
-                            errorResponse.error?.details is String -> {
-                                errorResponse.error.details.toString()
-                            }
-                            else -> errorResponse.error?.message ?: "Registration failed"
-                        }
-                    } catch (e: Exception) {
-                        "Registration failed. Please try again."
+        // Adapter pattern: simplified callback via AuthRepository
+        authRepository.register(request) { result ->
+            runOnUiThread {
+                setLoading(false, binding.btnRegister, getString(R.string.loading), getString(R.string.btn_register))
+                when (result) {
+                    is AuthResult.Success -> {
+                        // Template Method: shared session save + navigation
+                        saveSessionAndNavigate(result.authData, "Account created successfully!")
                     }
-                    showError(errorMsg)
+                    is AuthResult.Error -> {
+                        // Template Method: shared error display
+                        showError(result.message)
+                    }
                 }
             }
-
-            override fun onFailure(call: Call<ApiResponse<AuthData>>, t: Throwable) {
-                setLoading(false)
-                showError(getString(R.string.error_network) + "\n" + t.localizedMessage)
-            }
-        })
-    }
-
-    private fun showError(message: String) {
-        binding.tvError.text = message
-        binding.tvError.visibility = View.VISIBLE
-    }
-
-    private fun setLoading(loading: Boolean) {
-        binding.progressBar.visibility = if (loading) View.VISIBLE else View.GONE
-        binding.btnRegister.isEnabled = !loading
-        binding.btnRegister.text = if (loading) getString(R.string.loading) else getString(R.string.btn_register)
+        }
     }
 }

@@ -1,22 +1,35 @@
-import { useEffect, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
+/**
+ * Dashboard Page Component
+ *
+ * **Design Patterns Applied:**
+ *
+ * 1. **Facade (Structural)** — User data and logout are accessed through the
+ *    AuthService facade (via useAuth). No direct localStorage interaction.
+ *
+ * 2. **Observer (Behavioral)** — Uses useAuth() to subscribe to auth state.
+ *    When logout() is called, all Observer components (including ProtectedRoute)
+ *    automatically react — ProtectedRoute detects isAuthenticated=false and
+ *    redirects to login without this component needing to handle navigation.
+ *
+ * Before refactoring:
+ *   - Read user from localStorage.getItem('user') in useEffect
+ *   - Manually navigated to /login if no stored user
+ *   - Manually removed localStorage items on logout
+ *
+ * After refactoring:
+ *   - Gets user from auth.user (reactive, always up-to-date)
+ *   - Route protection handled by ProtectedRoute (Observer pattern)
+ *   - Logout calls auth.logout() — a single method that clears everything
+ */
 function Dashboard() {
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const stored = localStorage.getItem('user');
-    if (!stored) {
-      navigate('/login');
-      return;
-    }
-    setUser(JSON.parse(stored));
-  }, [navigate]);
 
   const handleLogout = () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
+    logout(); // Observer pattern: triggers re-render in all auth-aware components
     navigate('/login');
   };
 
