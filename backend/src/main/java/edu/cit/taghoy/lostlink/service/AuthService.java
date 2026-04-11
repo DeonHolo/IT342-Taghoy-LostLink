@@ -17,11 +17,14 @@ public class AuthService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
-    public AuthService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
+    public AuthService(UserRepository userRepository, RoleRepository roleRepository,
+                       PasswordEncoder passwordEncoder, EmailService emailService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
     }
 
     public User register(RegisterRequest request) {
@@ -36,7 +39,9 @@ public class AuthService {
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setRole(userRole);
 
-        return userRepository.save(user);
+        User saved = userRepository.save(user);
+        emailService.sendWelcome(saved.getEmail(), saved.getFirstName());
+        return saved;
     }
 
     public Optional<User> login(LoginRequest request) {

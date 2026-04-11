@@ -198,6 +198,26 @@ public class ItemController {
     }
 
     /**
+     * PUT /api/items/{id}/resolve — Owner toggles resolved status.
+     * Requires authentication and ownership.
+     */
+    @PutMapping("/{id}/resolve")
+    public ResponseEntity<ApiResponse<Object>> toggleResolve(@PathVariable Long id) {
+        User user = requireCurrentUser();
+        try {
+            Item item = itemService.toggleResolve(id, user);
+            ItemDTO dto = ItemDTO.fromEntity(item, false);
+            return ResponseEntity.ok(ApiResponse.ok(dto));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.error("AUTH-003", "Insufficient permissions", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("DB-001", "Resource not found", e.getMessage()));
+        }
+    }
+
+    /**
      * GET /api/items/my-posts — Get items posted by the current user.
      * Requires authentication.
      */

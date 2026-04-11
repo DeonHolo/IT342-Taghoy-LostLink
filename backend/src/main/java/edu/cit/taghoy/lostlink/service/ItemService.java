@@ -11,6 +11,7 @@ import edu.cit.taghoy.lostlink.repository.CategoryRepository;
 import edu.cit.taghoy.lostlink.repository.ClaimRepository;
 import edu.cit.taghoy.lostlink.repository.ItemRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -31,13 +32,16 @@ public class ItemService {
     private final ItemRepository itemRepository;
     private final CategoryRepository categoryRepository;
     private final ClaimRepository claimRepository;
+    private final EmailService emailService;
 
     private static final String UPLOAD_DIR = "uploads/";
 
-    public ItemService(ItemRepository itemRepository, CategoryRepository categoryRepository, ClaimRepository claimRepository) {
+    public ItemService(ItemRepository itemRepository, CategoryRepository categoryRepository,
+                       ClaimRepository claimRepository, EmailService emailService) {
         this.itemRepository = itemRepository;
         this.categoryRepository = categoryRepository;
         this.claimRepository = claimRepository;
+        this.emailService = emailService;
     }
 
     /**
@@ -141,7 +145,10 @@ public class ItemService {
         item.setCategory(category);
         item.setUser(user);
 
-        return itemRepository.save(item);
+        Item saved = itemRepository.save(item);
+        emailService.sendItemPostedConfirmation(
+                user.getEmail(), user.getFirstName(), saved.getTitle(), saved.getStatus());
+        return saved;
     }
 
     /**
@@ -256,6 +263,7 @@ public class ItemService {
      * Reveal contact info / dropoff location for an item.
      * Logs the action in the claims audit trail.
      */
+    @Transactional
     public ItemDTO revealItemDetails(Long itemId, User user) {
         if (user.isSuspended()) {
             throw new SecurityException("Your account is suspended. You cannot reveal contact information.");
@@ -274,6 +282,30 @@ public class ItemService {
 
         // Return item with sensitive info visible
         return ItemDTO.fromEntity(item, false);
+    }
+
+    /**
+     * Owner toggles their own item as RESOLVED or back to its original status.
+     */
+    public Item toggleResolve(Long id, User user) {
+        Item item = itemRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Item not found."));
+
+        if (!item.getUser().getId().equals(user.getId())) {
+            throw new SecurityException("You can only resolve your own posts.");
+        }
+
+        if ("RESOLVED".equalsIgnoreCase(item.getStatus())) {
+            String restore = item.getStatusBeforeResolve();
+            if (restore == null) restore = "FOUND";
+            item.setStatus(restore);
+            item.setStatusBeforeResolve(null);
+        } else {
+            item.setStatusBeforeResolve(item.getStatus());
+            item.setStatus("RESOLVED");
+        }
+
+        return itemRepository.save(item);
     }
 
     /**

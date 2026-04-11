@@ -39,6 +39,8 @@ dist/
 .env.*.local
 web/.env
 backend/.env
+# Local secrets (Gmail app password, etc.) — copy from application-local.properties.example
+backend/src/main/resources/application-local.properties
 *.log
 
 ### Android/Mobile ###

@@ -70,6 +70,14 @@ const ItemService = {
   },
 
   /**
+   * Owner toggles item resolved/unresolved.
+   */
+  async toggleResolve(id) {
+    const res = await API.put(`/items/${id}/resolve`);
+    return res.data;
+  },
+
+  /**
    * Get the current user's posted items.
    */
   async getMyPosts() {

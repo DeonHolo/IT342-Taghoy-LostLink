@@ -5,6 +5,7 @@ import ImageNotSupportedOutlinedIcon from '@mui/icons-material/ImageNotSupported
 
 export default function ItemCard({ item, index = 0 }) {
   const isLost = item.status === 'LOST';
+  const isResolved = item.status === 'RESOLVED';
   const staggerClass = `stagger-${Math.min(index + 1, 6)}`;
 
   const formatDate = (dateStr) => {
@@ -47,9 +48,11 @@ export default function ItemCard({ item, index = 0 }) {
         <div className="absolute top-3 left-3">
           <span
             className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold tracking-wide uppercase shadow-sm ${
-              isLost
-                ? 'bg-maroon-900 text-white'
-                : 'bg-emerald-700 text-white'
+              isResolved
+                ? 'bg-zinc-600 text-white'
+                : isLost
+                  ? 'bg-maroon-900 text-white'
+                  : 'bg-emerald-700 text-white'
             }`}
           >
             {item.status}

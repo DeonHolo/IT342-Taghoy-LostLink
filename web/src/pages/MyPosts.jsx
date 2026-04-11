@@ -35,6 +35,7 @@ export default function MyPosts() {
 
   const lostCount = items.filter((i) => i.status === 'LOST').length;
   const foundCount = items.filter((i) => i.status === 'FOUND').length;
+  const resolvedCount = items.filter((i) => i.status === 'RESOLVED').length;
 
   return (
     <div className="min-h-[100dvh] bg-stone-50">
@@ -89,6 +90,16 @@ export default function MyPosts() {
             }`}
           >
             Found ({foundCount})
+          </button>
+          <button
+            onClick={() => setStatusFilter('RESOLVED')}
+            className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              statusFilter === 'RESOLVED'
+                ? 'bg-zinc-700 text-white shadow-sm'
+                : 'bg-white border border-zinc-200 text-zinc-600 hover:border-zinc-300'
+            }`}
+          >
+            Resolved ({resolvedCount})
           </button>
         </div>
 

@@ -12,6 +12,8 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import UndoOutlinedIcon from '@mui/icons-material/UndoOutlined';
 import ImageNotSupportedOutlinedIcon from '@mui/icons-material/ImageNotSupportedOutlined';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlineOutlined';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutlineOutlined';
@@ -28,6 +30,7 @@ export default function ItemDetail() {
   const [revealData, setRevealData] = useState(null);
   const [revealing, setRevealing] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [resolving, setResolving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
@@ -71,6 +74,19 @@ export default function ItemDetail() {
     } catch {
       setError('Failed to delete item.');
       setDeleting(false);
+    }
+  };
+
+  const handleToggleResolve = async () => {
+    setResolving(true);
+    try {
+      const data = await ItemService.toggleResolve(id);
+      const updated = data.data || data;
+      setItem((prev) => ({ ...prev, status: updated.status }));
+    } catch {
+      setError('Failed to update item status.');
+    } finally {
+      setResolving(false);
     }
   };
 
@@ -133,6 +149,7 @@ export default function ItemDetail() {
   }
 
   const isLost = item?.status === 'LOST';
+  const isResolved = item?.status === 'RESOLVED';
 
   const contactDisplayText = formatContactLine(
     revealData?.contactPlatform ?? item?.contactPlatform,
@@ -203,9 +220,11 @@ export default function ItemDetail() {
               <div className="flex items-center gap-2.5 mb-3">
                 <span
                   className={`inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold tracking-wide uppercase ${
-                    isLost
-                      ? 'bg-maroon-900 text-white'
-                      : 'bg-emerald-700 text-white'
+                    isResolved
+                      ? 'bg-zinc-600 text-white'
+                      : isLost
+                        ? 'bg-maroon-900 text-white'
+                        : 'bg-emerald-700 text-white'
                   }`}
                 >
                   {item.status}
@@ -329,21 +348,46 @@ export default function ItemDetail() {
             </div>
 
             {isOwner && (
-              <div className="flex gap-3 pt-2">
-                <Link
-                  to={`/items/${item.id}/edit`}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium border border-zinc-300 text-zinc-700 hover:bg-zinc-50 hover:border-zinc-400 transition-all"
-                >
-                  <EditOutlinedIcon sx={{ fontSize: 16 }} />
-                  Edit
-                </Link>
+              <div className="space-y-3 pt-2">
                 <button
-                  onClick={() => setShowDeleteConfirm(true)}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium border border-maroon-200 text-maroon-700 hover:bg-maroon-50 hover:border-maroon-300 transition-all cursor-pointer"
+                  onClick={handleToggleResolve}
+                  disabled={resolving}
+                  className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer disabled:opacity-60 ${
+                    isResolved
+                      ? 'border border-gold-300 text-gold-800 hover:bg-gold-50'
+                      : 'bg-emerald-700 text-white hover:bg-emerald-600'
+                  }`}
                 >
-                  <DeleteOutlineIcon sx={{ fontSize: 16 }} />
-                  Delete
+                  {resolving ? (
+                    <span className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin" />
+                  ) : isResolved ? (
+                    <>
+                      <UndoOutlinedIcon sx={{ fontSize: 16 }} />
+                      Reopen Report
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircleIcon sx={{ fontSize: 16 }} />
+                      Mark as Resolved
+                    </>
+                  )}
                 </button>
+                <div className="flex gap-3">
+                  <Link
+                    to={`/items/${item.id}/edit`}
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium border border-zinc-300 text-zinc-700 hover:bg-zinc-50 hover:border-zinc-400 transition-all"
+                  >
+                    <EditOutlinedIcon sx={{ fontSize: 16 }} />
+                    Edit
+                  </Link>
+                  <button
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium border border-maroon-200 text-maroon-700 hover:bg-maroon-50 hover:border-maroon-300 transition-all cursor-pointer"
+                  >
+                    <DeleteOutlineIcon sx={{ fontSize: 16 }} />
+                    Delete
+                  </button>
+                </div>
               </div>
             )}
           </div>
