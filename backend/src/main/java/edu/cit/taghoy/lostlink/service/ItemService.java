@@ -19,6 +19,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -82,6 +84,17 @@ public class ItemService {
     }
 
     /**
+     * Filter items by date range (ISO dates: yyyy-MM-dd).
+     */
+    public List<ItemDTO> getItemsByDateRange(String dateFrom, String dateTo) {
+        LocalDateTime from = dateFrom != null ? LocalDate.parse(dateFrom).atStartOfDay() : null;
+        LocalDateTime to = dateTo != null ? LocalDate.parse(dateTo).plusDays(1).atStartOfDay() : null;
+        return itemRepository.findAllActiveByDateRange(from, to).stream()
+                .map(item -> ItemDTO.fromEntity(item, true))
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Get a single item's details.
      * Sensitive info is hidden unless the user has already revealed it.
      */
@@ -108,6 +121,10 @@ public class ItemService {
      * Create a new item post.
      */
     public Item createItem(ItemRequest request, User user) {
+        if (user.isSuspended()) {
+            throw new SecurityException("Your account is suspended. You cannot post items.");
+        }
+
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new IllegalArgumentException("Category not found."));
 
@@ -240,6 +257,10 @@ public class ItemService {
      * Logs the action in the claims audit trail.
      */
     public ItemDTO revealItemDetails(Long itemId, User user) {
+        if (user.isSuspended()) {
+            throw new SecurityException("Your account is suspended. You cannot reveal contact information.");
+        }
+
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new IllegalArgumentException("Item not found."));
 

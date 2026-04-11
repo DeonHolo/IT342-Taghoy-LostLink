@@ -7,6 +7,7 @@ import {
   adminGetItems,
   adminUpdateRole,
   adminDeleteUser,
+  adminToggleSuspend,
   adminDeleteItem,
   adminResolveItem,
   adminUnresolveItem,
@@ -30,6 +31,8 @@ import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOu
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import UndoOutlinedIcon from '@mui/icons-material/UndoOutlined';
 import ListAltIcon from '@mui/icons-material/ListAlt';
+import BlockIcon from '@mui/icons-material/Block';
+import CheckIcon from '@mui/icons-material/Check';
 
 function MetricTile({ label, value, accent }) {
   return (
@@ -204,6 +207,18 @@ export default function AdminDashboard() {
             : prev,
         );
         setFeedback({ type: 'success', message: `Item restored as ${unresolveRestore}.` });
+      } else if (confirm.type === 'suspendUser') {
+        const res = await adminToggleSuspend(confirm.user.id);
+        const updated = res.data?.data;
+        setUsers((prev) =>
+          prev.map((u) =>
+            u.id === confirm.user.id ? { ...u, suspended: updated?.suspended ?? !u.suspended } : u,
+          ),
+        );
+        setFeedback({
+          type: 'success',
+          message: updated?.suspended ? 'User suspended.' : 'User unsuspended.',
+        });
       } else if (confirm.type === 'deleteCategory') {
         await adminDeleteCategory(confirm.category.id);
         setCategories((prev) => prev.filter((c) => c.id !== confirm.category.id));
@@ -214,6 +229,7 @@ export default function AdminDashboard() {
       const msgs = {
         deleteUser: 'Failed to delete user.',
         role: 'Failed to update role.',
+        suspendUser: 'Failed to toggle suspension.',
         deleteItem: 'Failed to delete item.',
         resolveItem: 'Failed to resolve item.',
         unresolveItem: 'Failed to restore item.',
@@ -290,6 +306,7 @@ export default function AdminDashboard() {
   const confirmTitle = {
     deleteUser: 'Delete this user?',
     role: 'Change user role?',
+    suspendUser: confirm?.user?.suspended ? 'Unsuspend this user?' : 'Suspend this user?',
     deleteItem: 'Delete this item?',
     resolveItem: 'Resolve this item?',
     unresolveItem: 'Restore item to feed?',
@@ -299,6 +316,7 @@ export default function AdminDashboard() {
   const confirmLabel = {
     deleteUser: 'Delete user',
     role: 'Change role',
+    suspendUser: confirm?.user?.suspended ? 'Unsuspend' : 'Suspend',
     deleteItem: 'Delete item',
     resolveItem: 'Resolve',
     unresolveItem: 'Restore',
@@ -308,7 +326,8 @@ export default function AdminDashboard() {
   const confirmVariant =
     confirm?.type === 'role' ||
     confirm?.type === 'resolveItem' ||
-    confirm?.type === 'unresolveItem'
+    confirm?.type === 'unresolveItem' ||
+    (confirm?.type === 'suspendUser' && confirm?.user?.suspended)
       ? 'default'
       : 'danger';
 
@@ -345,13 +364,14 @@ export default function AdminDashboard() {
 
         {/* ─── Stats row ─── */}
         {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-8">
             <MetricTile label="Total Users" value={stats.totalUsers} accent="text-maroon-800" />
             <MetricTile label="Total Items" value={stats.totalItems} accent="text-zinc-900" />
             <MetricTile label="Lost" value={stats.lostCount} accent="text-red-600" />
             <MetricTile label="Found" value={stats.foundCount} accent="text-emerald-600" />
             <MetricTile label="Resolved" value={stats.resolvedCount ?? 0} accent="text-zinc-500" />
             <MetricTile label="Claims" value={stats.claimsCount ?? 0} accent="text-amber-700" />
+            <MetricTile label="Suspended" value={stats.suspendedCount ?? 0} accent="text-red-500" />
           </div>
         )}
 
@@ -374,24 +394,30 @@ export default function AdminDashboard() {
               <EmptyState icon={<PersonOutlineIcon sx={{ fontSize: 40, color: '#d4d4d8' }} />} text="No users found." />
             ) : (
               <div className="divide-y divide-zinc-100">
-                <div className="hidden sm:grid grid-cols-[1fr_1fr_120px_100px_80px] gap-4 px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-zinc-400 bg-zinc-50/60">
+                <div className="hidden sm:grid grid-cols-[1fr_1fr_120px_100px_100px] gap-4 px-5 py-3 text-[11px] font-semibold uppercase tracking-wider text-zinc-400 bg-zinc-50/60">
                   <span>Name</span>
                   <span>Email</span>
                   <span>Student ID</span>
                   <span>Role</span>
-                  <span />
+                  <span className="text-right">Actions</span>
                 </div>
                 {users.map((u, i) => {
                   const nextRole = u.role === 'ADMIN' ? 'USER' : 'ADMIN';
                   const blockSelfDemote = isSameUser(u.id) && u.role === 'ADMIN' && nextRole === 'USER';
+                  const isAdmin = u.role === 'ADMIN';
                   return (
                     <div
                       key={u.id}
-                      className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_120px_100px_80px] gap-2 sm:gap-4 px-5 py-3.5 items-center hover:bg-zinc-50/60 transition-colors"
+                      className={`grid grid-cols-1 sm:grid-cols-[1fr_1fr_120px_100px_100px] gap-2 sm:gap-4 px-5 py-3.5 items-center hover:bg-zinc-50/60 transition-colors ${u.suspended ? 'bg-red-50/40' : ''}`}
                       style={{ animation: `fadeInUp 0.3s cubic-bezier(0.16,1,0.3,1) ${Math.min(i, 12) * 40}ms both` }}
                     >
-                      <span className="text-sm font-semibold text-zinc-900 truncate">
+                      <span className="text-sm font-semibold text-zinc-900 truncate flex items-center gap-2">
                         {u.firstName} {u.lastName}
+                        {u.suspended && (
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-red-100 text-red-700 border border-red-200/60">
+                            Suspended
+                          </span>
+                        )}
                       </span>
                       <span className="text-sm text-zinc-600 truncate">{u.email}</span>
                       <span className="text-sm text-zinc-500 font-mono">{u.studentId || '-'}</span>
@@ -403,26 +429,42 @@ export default function AdminDashboard() {
                         className={`w-fit px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all duration-200 active:scale-[0.95] border ${
                           blockSelfDemote
                             ? 'opacity-50 cursor-not-allowed bg-zinc-50 text-zinc-400 border-zinc-200'
-                            : u.role === 'ADMIN'
+                            : isAdmin
                               ? 'bg-gold-100 text-gold-800 border-gold-300/60 hover:bg-gold-200 cursor-pointer'
                               : 'bg-zinc-100 text-zinc-600 border-zinc-200/60 hover:bg-zinc-200 cursor-pointer'
                         }`}
                       >
                         {u.role}
                       </button>
-                      <button
-                        type="button"
-                        disabled={isSameUser(u.id)}
-                        onClick={() => setConfirm({ type: 'deleteUser', user: u })}
-                        className={`w-fit p-1.5 rounded-lg transition-all ${
-                          isSameUser(u.id)
-                            ? 'text-zinc-200 cursor-not-allowed'
-                            : 'text-zinc-400 hover:text-red-600 hover:bg-red-50 cursor-pointer'
-                        }`}
-                        title={isSameUser(u.id) ? 'You cannot delete your own account' : 'Delete user'}
-                      >
-                        <DeleteOutlineIcon sx={{ fontSize: 16 }} />
-                      </button>
+                      <div className="flex items-center gap-1 justify-end">
+                        {!isSameUser(u.id) && !isAdmin && (
+                          <button
+                            type="button"
+                            onClick={() => setConfirm({ type: 'suspendUser', user: u })}
+                            className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                              u.suspended
+                                ? 'text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50'
+                                : 'text-zinc-400 hover:text-amber-600 hover:bg-amber-50'
+                            }`}
+                            title={u.suspended ? 'Unsuspend user' : 'Suspend user'}
+                          >
+                            {u.suspended ? <CheckIcon sx={{ fontSize: 16 }} /> : <BlockIcon sx={{ fontSize: 16 }} />}
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          disabled={isSameUser(u.id)}
+                          onClick={() => setConfirm({ type: 'deleteUser', user: u })}
+                          className={`p-1.5 rounded-lg transition-all ${
+                            isSameUser(u.id)
+                              ? 'text-zinc-200 cursor-not-allowed'
+                              : 'text-zinc-400 hover:text-red-600 hover:bg-red-50 cursor-pointer'
+                          }`}
+                          title={isSameUser(u.id) ? 'You cannot delete your own account' : 'Delete user'}
+                        >
+                          <DeleteOutlineIcon sx={{ fontSize: 16 }} />
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
@@ -662,6 +704,18 @@ export default function AdminDashboard() {
                 {confirm.user.firstName} {confirm.user.lastName}
               </span>{' '}
               ({confirm.user.email}) and their data from the system. This cannot be undone.
+            </p>
+          )}
+          {confirm?.type === 'suspendUser' && (
+            <p>
+              {confirm.user.suspended ? 'Unsuspend' : 'Suspend'}{' '}
+              <span className="font-semibold text-zinc-800">
+                {confirm.user.firstName} {confirm.user.lastName}
+              </span>
+              ?{' '}
+              {confirm.user.suspended
+                ? 'They will be able to post items and reveal contact info again.'
+                : 'They will be blocked from posting items and revealing contact info.'}
             </p>
           )}
           {confirm?.type === 'role' && (

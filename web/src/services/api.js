@@ -67,6 +67,8 @@ API.interceptors.response.use(
 export const registerUser = (data) => API.post('/auth/register', data);
 export const loginUser = (data) => API.post('/auth/login', data);
 export const googleLogin = (token) => API.post('/auth/google', { token });
+export const logoutUser = () => API.post('/auth/logout');
+export const getAuthMe = () => API.get('/auth/me');
 
 export const getProfile = () => API.get('/users/profile');
 export const updateProfile = (data) => API.put('/users/profile', data);
@@ -75,6 +77,7 @@ export const getActivity = () => API.get('/users/activity');
 export const adminGetUsers = () => API.get('/admin/users');
 export const adminUpdateRole = (userId, roleName) => API.put(`/admin/users/${userId}/role`, { roleName });
 export const adminDeleteUser = (userId) => API.delete(`/admin/users/${userId}`);
+export const adminToggleSuspend = (userId) => API.put(`/admin/users/${userId}/suspend`);
 export const adminGetItems = () => API.get('/admin/items');
 export const adminDeleteItem = (itemId) => API.delete(`/admin/items/${itemId}`);
 export const adminResolveItem = (itemId) => API.put(`/admin/items/${itemId}/resolve`);

@@ -4,11 +4,13 @@ const ItemService = {
   /**
    * Get all active items with optional search/filter params.
    */
-  async getItems({ search, status, categoryId } = {}) {
+  async getItems({ search, status, categoryId, dateFrom, dateTo } = {}) {
     const params = new URLSearchParams();
     if (search) params.append('search', search);
     if (status) params.append('status', status);
     if (categoryId) params.append('categoryId', categoryId);
+    if (dateFrom) params.append('dateFrom', dateFrom);
+    if (dateTo) params.append('dateTo', dateTo);
 
     const res = await API.get(`/items?${params.toString()}`);
     return res.data;

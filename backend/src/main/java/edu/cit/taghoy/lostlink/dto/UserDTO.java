@@ -32,6 +32,7 @@ public class UserDTO {
     private String contactPlatform;
     private String contactDetails;
     private String role;
+    private boolean suspended;
 
     public static UserDTO fromEntity(User user) {
         String[] parts = ContactPreferenceCodec.decode(user.getContactPreference());
@@ -45,6 +46,7 @@ public class UserDTO {
                 .contactPlatform(parts[0])
                 .contactDetails(parts[1])
                 .role(user.getRoleName())
+                .suspended(user.isSuspended())
                 .build();
     }
 }

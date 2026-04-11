@@ -1,4 +1,4 @@
-import { loginUser, registerUser, googleLogin } from './api';
+import { loginUser, registerUser, googleLogin, logoutUser } from './api';
 
 /**
  * Authentication Service Facade
@@ -107,9 +107,13 @@ const AuthService = {
 
   /**
    * Log out the current user.
-   * Clears all stored authentication data from localStorage.
+   * Notifies the backend (fire-and-forget), then clears local storage.
+   * The request runs while the token is still present so the interceptor can attach it.
    */
   logout() {
+    if (localStorage.getItem('token')) {
+      logoutUser().catch(() => {});
+    }
     localStorage.removeItem('user');
     localStorage.removeItem('token');
   },

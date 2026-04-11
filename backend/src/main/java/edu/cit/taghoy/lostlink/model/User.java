@@ -39,6 +39,9 @@ public class User {
     @Column(name = "contact_preference")
     private String contactPreference;
 
+    @Column(nullable = false)
+    private boolean suspended = false;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;

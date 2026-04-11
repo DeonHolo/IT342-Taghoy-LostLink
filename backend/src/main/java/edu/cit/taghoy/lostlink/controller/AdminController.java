@@ -92,6 +92,19 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.ok(Map.of("message", "User deleted successfully.")));
     }
 
+    @PutMapping("/users/{userId}/suspend")
+    public ResponseEntity<ApiResponse<Object>> toggleSuspend(@PathVariable Long userId) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("ADMIN-002", "User not found", "No user exists with id " + userId));
+        }
+        User target = userOpt.get();
+        target.setSuspended(!target.isSuspended());
+        userRepository.save(target);
+        return ResponseEntity.ok(ApiResponse.ok(UserDTO.fromEntity(target)));
+    }
+
     @GetMapping("/items")
     public ResponseEntity<ApiResponse<Object>> getAllItems() {
         List<ItemDTO> items = itemRepository.findAll().stream()
@@ -235,6 +248,7 @@ public class AdminController {
         long foundCount = allItems.stream().filter(i -> "FOUND".equalsIgnoreCase(i.getStatus())).count();
         long resolvedCount = allItems.stream().filter(i -> "RESOLVED".equalsIgnoreCase(i.getStatus())).count();
         long claimsCount = claimRepository.count();
+        long suspendedCount = userRepository.countBySuspendedTrue();
 
         Map<String, Object> stats = new LinkedHashMap<>();
         stats.put("totalUsers", totalUsers);
@@ -243,6 +257,7 @@ public class AdminController {
         stats.put("foundCount", foundCount);
         stats.put("resolvedCount", resolvedCount);
         stats.put("claimsCount", claimsCount);
+        stats.put("suspendedCount", suspendedCount);
 
         return ResponseEntity.ok(ApiResponse.ok(stats));
     }

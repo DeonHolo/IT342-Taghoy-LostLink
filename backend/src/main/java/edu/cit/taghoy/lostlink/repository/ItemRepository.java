@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -42,4 +43,11 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     @Query("SELECT i FROM Item i WHERE i.status <> 'RESOLVED' AND i.category.id = :categoryId ORDER BY i.createdAt DESC")
     List<Item> findAllActiveByCategoryId(@Param("categoryId") Long categoryId);
+
+    @Query("SELECT i FROM Item i WHERE i.status <> 'RESOLVED' " +
+           "AND (:from IS NULL OR i.createdAt >= :from) " +
+           "AND (:to IS NULL OR i.createdAt <= :to) " +
+           "ORDER BY i.createdAt DESC")
+    List<Item> findAllActiveByDateRange(@Param("from") LocalDateTime from,
+                                        @Param("to") LocalDateTime to);
 }

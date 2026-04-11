@@ -19,6 +19,8 @@ export default function Feed() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   const fetchItems = useCallback(async () => {
     try {
@@ -28,6 +30,8 @@ export default function Feed() {
         search: search || undefined,
         status: statusFilter || undefined,
         categoryId: categoryFilter || undefined,
+        dateFrom: dateFrom || undefined,
+        dateTo: dateTo || undefined,
       });
 
       setItems(data.data || data || []);
@@ -37,7 +41,7 @@ export default function Feed() {
     } finally {
       setLoading(false);
     }
-  }, [search, statusFilter, categoryFilter]);
+  }, [search, statusFilter, categoryFilter, dateFrom, dateTo]);
 
   useEffect(() => {
     CategoryService.getAll()
@@ -137,12 +141,34 @@ export default function Feed() {
               </select>
             )}
 
-            {(search || statusFilter || categoryFilter) && (
+            <div className="flex items-center gap-1.5">
+              <label className="text-[11px] text-zinc-400 font-medium">From</label>
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className="px-2 py-1.5 rounded-lg text-xs border border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300 transition-all cursor-pointer"
+              />
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              <label className="text-[11px] text-zinc-400 font-medium">To</label>
+              <input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                className="px-2 py-1.5 rounded-lg text-xs border border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300 transition-all cursor-pointer"
+              />
+            </div>
+
+            {(search || statusFilter || categoryFilter || dateFrom || dateTo) && (
               <button
                 onClick={() => {
                   setSearch('');
                   setStatusFilter('');
                   setCategoryFilter('');
+                  setDateFrom('');
+                  setDateTo('');
                 }}
                 className="px-3 py-1.5 rounded-lg text-xs font-medium text-maroon-700 hover:bg-maroon-50 transition-all cursor-pointer"
               >
@@ -183,12 +209,12 @@ export default function Feed() {
               <InboxOutlinedIcon sx={{ fontSize: 28, color: '#a1a1aa' }} />
             </div>
             <h3 className="text-lg font-semibold text-zinc-900 mb-1">
-              {search || statusFilter || categoryFilter
+              {search || statusFilter || categoryFilter || dateFrom || dateTo
                 ? 'No matching items'
                 : 'No items posted yet'}
             </h3>
             <p className="text-sm text-zinc-500 max-w-[38ch]">
-              {search || statusFilter || categoryFilter
+              {search || statusFilter || categoryFilter || dateFrom || dateTo
                 ? 'Try adjusting your search or filter criteria.'
                 : 'Be the first to report a lost or found item on campus.'}
             </p>

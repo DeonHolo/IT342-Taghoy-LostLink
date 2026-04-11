@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import AuthService from '../services/AuthService';
+import { getAuthMe } from '../services/api';
 
 /**
  * Authentication Context (Observer Pattern)
@@ -37,14 +38,48 @@ export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true); // Initial auth check
 
-  // On mount, check for existing session (hydrate from localStorage)
+  // On mount: optimistic state from localStorage, then sync role/profile from GET /auth/me
   useEffect(() => {
-    const storedUser = AuthService.getCurrentUser();
-    if (storedUser && AuthService.isAuthenticated()) {
-      setUser(storedUser);
-      setIsAuthenticated(true);
+    let cancelled = false;
+
+    async function hydrateSession() {
+      const token = localStorage.getItem('token');
+      const storedUser = AuthService.getCurrentUser();
+
+      if (!token) {
+        if (!cancelled) setLoading(false);
+        return;
+      }
+
+      if (storedUser) {
+        setUser(storedUser);
+        setIsAuthenticated(true);
+      }
+
+      try {
+        const res = await getAuthMe();
+        if (cancelled) return;
+        if (res.data?.success && res.data.data) {
+          const fresh = res.data.data;
+          setUser(fresh);
+          setIsAuthenticated(true);
+          localStorage.setItem('user', JSON.stringify(fresh));
+        }
+      } catch (err) {
+        if (cancelled) return;
+        if (err.response?.status === 401) {
+          setUser(null);
+          setIsAuthenticated(false);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     }
-    setLoading(false);
+
+    hydrateSession();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   /**

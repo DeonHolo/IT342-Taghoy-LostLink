@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import ItemService from '../services/ItemService';
 import CategoryService from '../services/CategoryService';
@@ -18,6 +19,7 @@ import {
 import ContactPlatformFields from '../components/ContactPlatformFields';
 
 export default function PostItem() {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
@@ -216,6 +218,31 @@ export default function PostItem() {
         ? 'border-maroon-400 bg-maroon-50/30'
         : 'border-zinc-300'
     }`;
+
+  if (user?.suspended) {
+    return (
+      <div className="min-h-[100dvh] bg-stone-50">
+        <Navbar />
+        <div className="flex items-center justify-center py-32">
+          <div className="text-center space-y-4 animate-fade-in-up max-w-md mx-auto">
+            <div className="w-16 h-16 mx-auto rounded-full bg-red-100 flex items-center justify-center">
+              <ErrorOutlineIcon sx={{ fontSize: 36, color: '#b91c1c' }} />
+            </div>
+            <h2 className="text-2xl font-bold text-zinc-900">Account Suspended</h2>
+            <p className="text-sm text-zinc-500">
+              Your account has been suspended by an administrator. You cannot post items at this time.
+            </p>
+            <button
+              onClick={() => navigate('/feed')}
+              className="mt-4 px-5 py-2.5 rounded-xl text-sm font-semibold bg-maroon-800 text-white hover:bg-maroon-700 transition-all cursor-pointer"
+            >
+              Go to Feed
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (success) {
     return (
