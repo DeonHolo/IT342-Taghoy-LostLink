@@ -70,6 +70,18 @@ export function AuthProvider({ children }) {
   }, []);
 
   /**
+   * Google Login — authenticates via Google ID token and notifies all Observers.
+   */
+  const loginWithGoogle = useCallback(async (idToken) => {
+    const result = await AuthService.loginWithGoogle(idToken);
+    if (result.success) {
+      setUser(result.user);
+      setIsAuthenticated(true);
+    }
+    return result;
+  }, []);
+
+  /**
    * Logout — clears auth state and notifies all Observers.
    * All components using useAuth() will see isAuthenticated become false.
    */
@@ -85,6 +97,7 @@ export function AuthProvider({ children }) {
     isAuthenticated,
     loading,
     login,
+    loginWithGoogle,
     register,
     logout,
   };

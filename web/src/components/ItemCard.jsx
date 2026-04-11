@@ -1,126 +1,131 @@
 import { Link } from 'react-router-dom';
-import Chip from '@mui/material/Chip';
-import PlaceIcon from '@mui/icons-material/Place';
+import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import ImageNotSupportedOutlinedIcon from '@mui/icons-material/ImageNotSupportedOutlined';
 
-const API_BASE = 'http://localhost:8080';
-
-export default function ItemCard({ item }) {
+export default function ItemCard({ item, index = 0 }) {
   const isLost = item.status === 'LOST';
-  const timeAgo = getTimeAgo(item.createdAt);
+  const staggerClass = `stagger-${Math.min(index + 1, 6)}`;
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    const now = new Date();
+    const diff = now - d;
+    const mins = Math.floor(diff / 60000);
+    const hrs = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+
+    if (mins < 1) return 'Just now';
+    if (mins < 60) return `${mins}m ago`;
+    if (hrs < 24) return `${hrs}h ago`;
+    if (days < 7) return `${days}d ago`;
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
 
   return (
     <Link
       to={`/items/${item.id}`}
-      className="block group no-underline"
+      className={`group block rounded-2xl bg-white border border-zinc-200/60 overflow-hidden transition-all duration-300 hover:shadow-[0_12px_40px_-12px_rgba(123,17,19,0.12)] hover:-translate-y-[2px] animate-fade-in-up ${staggerClass}`}
+      style={{ transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
     >
-      <div className="bg-white rounded-2xl overflow-hidden border border-[var(--color-border)] hover:border-[var(--color-primary-light)] transition-all duration-300 hover:shadow-lg hover:shadow-[var(--color-primary)]/5 hover:-translate-y-0.5">
-        {/* Image */}
-        <div className="relative h-48 bg-[var(--color-surface-alt)] overflow-hidden">
-          {item.imageUrl ? (
-            <img
-              src={`${API_BASE}${item.imageUrl}`}
-              alt={item.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <div className="text-center">
-                <span className="text-4xl">{isLost ? '🔍' : '📦'}</span>
-                <p className="text-xs text-[var(--color-text-muted)] mt-2">No image</p>
-              </div>
-            </div>
-          )}
-
-          {/* Status Badge */}
-          <div className="absolute top-3 left-3">
-            <Chip
-              label={item.status}
-              size="small"
-              sx={{
-                fontWeight: 700,
-                fontSize: '0.7rem',
-                letterSpacing: '0.05em',
-                bgcolor: isLost ? 'var(--color-lost)' : 'var(--color-found)',
-                color: 'white',
-                height: 24,
-              }}
-            />
+      <div className="relative aspect-[4/3] bg-zinc-100 overflow-hidden">
+        {item.imageUrl ? (
+          <img
+            src={item.imageUrl}
+            alt={item.title}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center text-zinc-300">
+            <ImageNotSupportedOutlinedIcon sx={{ fontSize: 48 }} />
+            <span className="text-xs mt-2 text-zinc-400">No image</span>
           </div>
+        )}
 
-          {/* Category */}
-          {item.categoryName && (
-            <div className="absolute top-3 right-3">
-              <Chip
-                label={item.categoryName}
-                size="small"
-                variant="filled"
-                sx={{
-                  bgcolor: 'rgba(255,255,255,0.9)',
-                  backdropFilter: 'blur(4px)',
-                  fontWeight: 500,
-                  fontSize: '0.65rem',
-                  height: 22,
-                }}
-              />
-            </div>
-          )}
+        <div className="absolute top-3 left-3">
+          <span
+            className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold tracking-wide uppercase shadow-sm ${
+              isLost
+                ? 'bg-maroon-900 text-white'
+                : 'bg-emerald-700 text-white'
+            }`}
+          >
+            {item.status}
+          </span>
         </div>
 
-        {/* Content */}
-        <div className="p-4">
-          <h3 className="font-semibold text-[var(--color-text)] text-sm leading-snug line-clamp-1 group-hover:text-[var(--color-primary)] transition-colors">
-            {item.title}
-          </h3>
+        {item.category && (
+          <div className="absolute top-3 right-3">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-zinc-900/60 text-white backdrop-blur-sm">
+              {item.category}
+            </span>
+          </div>
+        )}
+      </div>
 
-          {item.description && (
-            <p className="text-xs text-[var(--color-text-secondary)] mt-1 line-clamp-2 leading-relaxed">
-              {item.description}
-            </p>
+      <div className="p-4">
+        <h3 className="text-base font-semibold text-zinc-900 leading-snug line-clamp-2 group-hover:text-maroon-800 transition-colors duration-200">
+          {item.title}
+        </h3>
+
+        {item.description && (
+          <p className="mt-1.5 text-sm text-zinc-500 leading-relaxed line-clamp-2">
+            {item.description}
+          </p>
+        )}
+
+        <div className="mt-3 flex items-center gap-3 text-xs text-zinc-400">
+          {item.location && (
+            <span className="flex items-center gap-1">
+              <PlaceOutlinedIcon sx={{ fontSize: 14 }} />
+              <span className="truncate max-w-[140px]">{item.location}</span>
+            </span>
           )}
-
-          {/* AI Tags */}
-          {item.aiTags && item.aiTags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2">
-              {item.aiTags.slice(0, 3).map((tag, i) => (
-                <span
-                  key={i}
-                  className="text-[10px] px-2 py-0.5 rounded-full bg-[var(--color-bg)] text-[var(--color-text-muted)] font-medium"
-                >
-                  {tag.trim()}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {/* Meta */}
-          <div className="flex items-center justify-between mt-3 pt-3 border-t border-[var(--color-border-light)]">
-            <div className="flex items-center gap-1 text-[var(--color-text-muted)]">
-              <PlaceIcon sx={{ fontSize: 14 }} />
-              <span className="text-xs truncate max-w-[120px]">{item.location}</span>
-            </div>
-            <div className="flex items-center gap-1 text-[var(--color-text-muted)]">
+          {item.createdAt && (
+            <span className="flex items-center gap-1">
               <AccessTimeIcon sx={{ fontSize: 13 }} />
-              <span className="text-[11px]">{timeAgo}</span>
-            </div>
-          </div>
+              {formatDate(item.createdAt)}
+            </span>
+          )}
         </div>
+
+        {item.aiTags && item.aiTags.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {item.aiTags.slice(0, 4).map((tag) => (
+              <span
+                key={tag}
+                className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-gold-100 text-gold-800 border border-gold-200/60"
+              >
+                {tag}
+              </span>
+            ))}
+            {item.aiTags.length > 4 && (
+              <span className="px-2 py-0.5 rounded-md text-[10px] font-medium text-zinc-400">
+                +{item.aiTags.length - 4}
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </Link>
   );
 }
 
-function getTimeAgo(dateString) {
-  if (!dateString) return '';
-  const now = new Date();
-  const date = new Date(dateString);
-  const diffMs = now - date;
-  const diffMins = Math.floor(diffMs / 60000);
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours}h ago`;
-  const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 7) return `${diffDays}d ago`;
-  return date.toLocaleDateString();
+export function ItemCardSkeleton() {
+  return (
+    <div className="rounded-2xl bg-white border border-zinc-200/60 overflow-hidden">
+      <div className="aspect-[4/3] animate-shimmer" />
+      <div className="p-4 space-y-3">
+        <div className="h-5 w-3/4 rounded-md animate-shimmer" />
+        <div className="h-4 w-full rounded-md animate-shimmer" />
+        <div className="h-4 w-1/2 rounded-md animate-shimmer" />
+        <div className="flex gap-2 mt-2">
+          <div className="h-5 w-14 rounded-md animate-shimmer" />
+          <div className="h-5 w-14 rounded-md animate-shimmer" />
+        </div>
+      </div>
+    </div>
+  );
 }

@@ -1,44 +1,35 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
 @import "tailwindcss";
 
 @theme {
-  /* ── LostLink Design Tokens ── */
-  --color-primary: #1a56db;
-  --color-primary-light: #3b82f6;
-  --color-primary-dark: #1e3a5f;
-  --color-accent: #f59e0b;
-  --color-accent-light: #fbbf24;
+  --font-sans: "Outfit", system-ui, -apple-system, sans-serif;
 
-  --color-lost: #ef4444;
-  --color-lost-bg: #fef2f2;
-  --color-found: #10b981;
-  --color-found-bg: #ecfdf5;
-  --color-resolved: #6b7280;
+  --color-maroon-50: #fdf2f3;
+  --color-maroon-100: #fce4e7;
+  --color-maroon-200: #facdd3;
+  --color-maroon-300: #f5a3ad;
+  --color-maroon-400: #ed6b7a;
+  --color-maroon-500: #e04050;
+  --color-maroon-600: #cc2233;
+  --color-maroon-700: #ab1a29;
+  --color-maroon-800: #8e1a26;
+  --color-maroon-900: #7B1113;
+  --color-maroon-950: #44080a;
 
-  --color-surface: #ffffff;
-  --color-surface-alt: #f8fafc;
-  --color-bg: #f1f5f9;
-  --color-text: #0f172a;
-  --color-text-secondary: #475569;
-  --color-text-muted: #94a3b8;
-  --color-border: #e2e8f0;
-  --color-border-light: #f1f5f9;
-
-  --color-error: #dc2626;
-  --color-error-bg: #fef2f2;
-  --color-success: #16a34a;
-  --color-success-bg: #f0fdf4;
-
-  --font-display: "DM Sans", "Segoe UI", system-ui, sans-serif;
-  --font-body: "DM Sans", "Segoe UI", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+  --color-gold-50: #fdfaed;
+  --color-gold-100: #faf2cf;
+  --color-gold-200: #f4e39f;
+  --color-gold-300: #edcf65;
+  --color-gold-400: #e6bb3a;
+  --color-gold-500: #C9A227;
+  --color-gold-600: #b08419;
+  --color-gold-700: #926318;
+  --color-gold-800: #794f1b;
+  --color-gold-900: #65411c;
 }
 
-
-/* ── Base Reset ── */
-*, *::before, *::after {
-  margin: 0;
-  padding: 0;
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -49,37 +40,51 @@ html {
 }
 
 body {
-  font-family: var(--font-body);
-  background: var(--color-bg);
-  color: var(--color-text);
-  line-height: 1.6;
-  min-height: 100vh;
+  font-family: var(--font-sans);
+  min-height: 100dvh;
 }
 
-/* ── Scrollbar ── */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--color-text-muted); border-radius: 3px; }
-
-/* ── Selection ── */
 ::selection {
-  background: var(--color-primary);
-  color: white;
+  background-color: #C9A227;
+  color: #44080a;
 }
 
-/* ── MUI overrides to match our design system ── */
-.MuiButton-root {
-  font-family: var(--font-body) !important;
-  text-transform: none !important;
-  font-weight: 600 !important;
-  border-radius: 10px !important;
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid #7B1113;
+  outline-offset: 1px;
 }
 
-.MuiPaper-root {
-  border-radius: 16px !important;
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.MuiChip-root {
-  font-family: var(--font-body) !important;
-  font-weight: 500 !important;
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+.stagger-1 { animation-delay: 50ms; }
+.stagger-2 { animation-delay: 100ms; }
+.stagger-3 { animation-delay: 150ms; }
+.stagger-4 { animation-delay: 200ms; }
+.stagger-5 { animation-delay: 250ms; }
+.stagger-6 { animation-delay: 300ms; }

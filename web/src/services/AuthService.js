@@ -1,4 +1,4 @@
-import { loginUser, registerUser } from './api';
+import { loginUser, registerUser, googleLogin } from './api';
 
 /**
  * Authentication Service Facade
@@ -79,6 +79,29 @@ const AuthService = {
       }
 
       return { success: false, error: this._parseError(err, 'Registration failed. Please try again.') };
+    }
+  },
+
+  /**
+   * Authenticate via Google OAuth ID token.
+   * Sends the token to the backend which verifies it with Google
+   * and returns a LostLink JWT.
+   *
+   * @param {string} idToken - The Google ID token from GIS
+   * @returns {Promise<{ success: boolean, user?: object, error?: string }>}
+   */
+  async loginWithGoogle(idToken) {
+    try {
+      const res = await googleLogin(idToken);
+      if (res.data.success) {
+        const { user, accessToken } = res.data.data;
+        localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('token', accessToken);
+        return { success: true, user };
+      }
+      return { success: false, error: 'Google login failed.' };
+    } catch (err) {
+      return { success: false, error: this._parseError(err, 'Google login failed. Please try again.') };
     }
   },
 

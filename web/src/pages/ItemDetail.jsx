@@ -1,63 +1,61 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import Navbar from '../components/Navbar';
+import LoginModal from '../components/LoginModal';
 import { useAuth } from '../context/AuthContext';
 import ItemService from '../services/ItemService';
-import Navbar from '../components/Navbar';
-import Button from '@mui/material/Button';
-import Chip from '@mui/material/Chip';
-import CircularProgress from '@mui/material/CircularProgress';
-import Alert from '@mui/material/Alert';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogTitle from '@mui/material/DialogTitle';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import PlaceIcon from '@mui/icons-material/Place';
-import PersonIcon from '@mui/icons-material/Person';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import LockOpenIcon from '@mui/icons-material/LockOpen';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-
-const API_BASE = 'http://localhost:8080';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import ImageNotSupportedOutlinedIcon from '@mui/icons-material/ImageNotSupportedOutlined';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlineOutlined';
+import PersonOutlineIcon from '@mui/icons-material/PersonOutlineOutlined';
 
 export default function ItemDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
+
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [revealing, setRevealing] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [error, setError] = useState('');
-
-  const isOwner = user && item && item.posterStudentId === user.studentId;
-  const hasRevealed = item?.contactPreference || item?.dropoffLocation;
+  const [revealed, setRevealed] = useState(false);
+  const [revealData, setRevealData] = useState(null);
+  const [revealing, setRevealing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
-    loadItem();
+    const fetchItem = async () => {
+      try {
+        setLoading(true);
+        const data = await ItemService.getItemById(id);
+        setItem(data.data || data);
+      } catch {
+        setError('Item not found or failed to load.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchItem();
   }, [id]);
 
-  const loadItem = async () => {
-    setLoading(true);
-    try {
-      const res = await ItemService.getItemById(id);
-      if (res.success) setItem(res.data);
-    } catch (err) {
-      setError('Item not found.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleReveal = async () => {
+    if (!isAuthenticated) {
+      setShowLoginModal(true);
+      return;
+    }
     setRevealing(true);
     try {
-      const res = await ItemService.revealDetails(id);
-      if (res.success) setItem(res.data);
-    } catch (err) {
+      const data = await ItemService.revealDetails(id);
+      setRevealData(data.data || data);
+      setRevealed(true);
+    } catch {
       setError('Failed to reveal details. Please try again.');
     } finally {
       setRevealing(false);
@@ -65,251 +63,319 @@ export default function ItemDetail() {
   };
 
   const handleDelete = async () => {
+    setDeleting(true);
     try {
       await ItemService.deleteItem(id);
       navigate('/my-posts');
-    } catch (err) {
+    } catch {
       setError('Failed to delete item.');
+      setDeleting(false);
     }
-    setDeleteDialogOpen(false);
+  };
+
+  const isOwner =
+    user &&
+    item &&
+    (user.studentId === item.posterId || user.identifier === item.posterId);
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[var(--color-bg)]">
+      <div className="min-h-[100dvh] bg-stone-50">
         <Navbar />
-        <div className="flex justify-center py-20">
-          <CircularProgress sx={{ color: 'var(--color-primary)' }} />
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 pt-8">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+            <div className="lg:col-span-3 aspect-[4/3] rounded-2xl animate-shimmer" />
+            <div className="lg:col-span-2 space-y-4">
+              <div className="h-8 w-3/4 rounded-lg animate-shimmer" />
+              <div className="h-5 w-1/2 rounded-lg animate-shimmer" />
+              <div className="h-24 w-full rounded-lg animate-shimmer" />
+              <div className="h-12 w-full rounded-lg animate-shimmer" />
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
-  if (!item) {
+  if (error && !item) {
     return (
-      <div className="min-h-screen bg-[var(--color-bg)]">
+      <div className="min-h-[100dvh] bg-stone-50">
         <Navbar />
-        <div className="max-w-3xl mx-auto px-4 py-12 text-center">
-          <span className="text-5xl">🔍</span>
-          <h2 className="text-xl font-bold mt-4">Item Not Found</h2>
-          <p className="text-[var(--color-text-muted)] mt-2">This item may have been removed.</p>
-          <Link to="/feed"><Button sx={{ mt: 2 }}>Back to Feed</Button></Link>
+        <div className="flex flex-col items-center justify-center py-32 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-maroon-100 flex items-center justify-center mb-4">
+            <ErrorOutlineIcon sx={{ fontSize: 28, color: '#7B1113' }} />
+          </div>
+          <h3 className="text-lg font-semibold text-zinc-900 mb-1">
+            Item not found
+          </h3>
+          <p className="text-sm text-zinc-500 mb-4">{error}</p>
+          <Link
+            to="/feed"
+            className="px-4 py-2 rounded-xl text-sm font-medium bg-maroon-900 text-white hover:bg-maroon-800 transition-all"
+          >
+            Back to Feed
+          </Link>
         </div>
       </div>
     );
   }
 
-  const isLost = item.status === 'LOST';
+  const isLost = item?.status === 'LOST';
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)]">
+    <div className="min-h-[100dvh] bg-stone-50">
       <Navbar />
 
-      <div className="max-w-4xl mx-auto px-4 md:px-8 py-8">
-        {/* Back Button */}
-        <Button
-          startIcon={<ArrowBackIcon />}
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 pt-6 pb-16">
+        <button
           onClick={() => navigate(-1)}
-          sx={{ mb: 3, color: 'var(--color-text-secondary)', fontWeight: 500 }}
+          className="flex items-center gap-1.5 text-sm font-medium text-zinc-500 hover:text-zinc-700 transition-colors mb-6 cursor-pointer"
         >
+          <ArrowBackIcon sx={{ fontSize: 18 }} />
           Back
-        </Button>
+        </button>
 
-        {error && <Alert severity="error" sx={{ mb: 3, borderRadius: '12px' }}>{error}</Alert>}
+        {error && (
+          <div className="mb-6 flex items-start gap-2.5 p-3.5 rounded-xl bg-maroon-50 border border-maroon-200 text-sm text-maroon-800 animate-fade-in-up">
+            <ErrorOutlineIcon sx={{ fontSize: 18, marginTop: '1px' }} />
+            <span>{error}</span>
+          </div>
+        )}
 
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-          {/* Image Section */}
-          <div className="md:col-span-3">
-            <div className="bg-white rounded-2xl overflow-hidden border border-[var(--color-border)]">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 animate-fade-in-up">
+          <div className="lg:col-span-3">
+            <div className="rounded-2xl overflow-hidden bg-zinc-100 border border-zinc-200/60">
               {item.imageUrl ? (
                 <img
-                  src={`${API_BASE}${item.imageUrl}`}
+                  src={item.imageUrl}
                   alt={item.title}
-                  className="w-full max-h-[500px] object-cover"
+                  className="w-full max-h-[480px] object-contain bg-zinc-50"
                 />
               ) : (
-                <div className="h-64 flex items-center justify-center bg-[var(--color-surface-alt)]">
-                  <div className="text-center">
-                    <span className="text-6xl">{isLost ? '🔍' : '📦'}</span>
-                    <p className="text-sm text-[var(--color-text-muted)] mt-3">No image uploaded</p>
-                  </div>
+                <div className="w-full aspect-[4/3] flex flex-col items-center justify-center text-zinc-300">
+                  <ImageNotSupportedOutlinedIcon sx={{ fontSize: 64 }} />
+                  <span className="text-sm mt-3 text-zinc-400">
+                    No image available
+                  </span>
                 </div>
               )}
             </div>
+
+            {item.aiTags && item.aiTags.length > 0 && (
+              <div className="mt-4">
+                <p className="text-xs font-medium text-zinc-400 uppercase tracking-wide mb-2">
+                  AI-Generated Tags
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {item.aiTags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="px-3 py-1 rounded-lg text-xs font-medium bg-gold-100 text-gold-800 border border-gold-200/60"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Info Section */}
-          <div className="md:col-span-2 space-y-4">
-            {/* Status + Category */}
-            <div className="flex gap-2">
-              <Chip
-                label={item.status}
-                sx={{
-                  fontWeight: 700,
-                  bgcolor: isLost ? 'var(--color-lost)' : 'var(--color-found)',
-                  color: 'white',
-                }}
-              />
-              {item.categoryName && (
-                <Chip label={item.categoryName} variant="outlined" size="small" />
-              )}
+          <div className="lg:col-span-2 space-y-6">
+            <div>
+              <div className="flex items-center gap-2.5 mb-3">
+                <span
+                  className={`inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold tracking-wide uppercase ${
+                    isLost
+                      ? 'bg-maroon-900 text-white'
+                      : 'bg-emerald-700 text-white'
+                  }`}
+                >
+                  {item.status}
+                </span>
+                {item.category && (
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-zinc-100 text-zinc-600 border border-zinc-200">
+                    {item.category}
+                  </span>
+                )}
+                {item.currentStatus && (
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-gold-100 text-gold-800 border border-gold-200/60">
+                    {item.currentStatus}
+                  </span>
+                )}
+              </div>
+
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tighter text-zinc-900 leading-tight">
+                {item.title}
+              </h1>
             </div>
 
-            {/* Title */}
-            <h1 className="text-2xl font-bold text-[var(--color-text)] leading-tight">
-              {item.title}
-            </h1>
+            <p className="text-sm text-zinc-600 leading-relaxed">
+              {item.description}
+            </p>
 
-            {/* Description */}
-            {item.description && (
-              <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
-                {item.description}
-              </p>
-            )}
-
-            {/* AI Tags */}
-            {item.aiTags && item.aiTags.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {item.aiTags.map((tag, i) => (
-                  <Chip
-                    key={i}
-                    label={tag.trim()}
-                    size="small"
-                    sx={{ bgcolor: 'var(--color-bg)', fontSize: '0.75rem' }}
+            <div className="space-y-2.5 pt-2 border-t border-zinc-200">
+              {item.location && (
+                <div className="flex items-center gap-2.5 text-sm text-zinc-600">
+                  <PlaceOutlinedIcon
+                    sx={{ fontSize: 18, color: '#7B1113' }}
                   />
-                ))}
-              </div>
-            )}
-
-            {/* Meta Info */}
-            <div className="bg-white rounded-xl border border-[var(--color-border)] p-4 space-y-3">
-              <div className="flex items-center gap-2 text-sm">
-                <PlaceIcon sx={{ fontSize: 18, color: 'var(--color-text-muted)' }} />
-                <span className="text-[var(--color-text-secondary)]">{item.location}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <PersonIcon sx={{ fontSize: 18, color: 'var(--color-text-muted)' }} />
-                <span className="text-[var(--color-text-secondary)]">
-                  Posted by {item.posterName || 'Anonymous'}
-                </span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <CalendarTodayIcon sx={{ fontSize: 16, color: 'var(--color-text-muted)' }} />
-                <span className="text-[var(--color-text-secondary)]">
-                  {new Date(item.createdAt).toLocaleDateString('en-US', {
-                    year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                  })}
-                </span>
-              </div>
-              {item.currentStatus && (
-                <Chip
-                  label={item.currentStatus === 'HOLDING' ? '🤝 Holder has it' : '🏢 Surrendered to office'}
-                  size="small"
-                  sx={{ bgcolor: 'var(--color-accent-light)/20', fontWeight: 500 }}
-                />
+                  <span>{item.location}</span>
+                </div>
+              )}
+              {item.createdAt && (
+                <div className="flex items-center gap-2.5 text-sm text-zinc-600">
+                  <AccessTimeIcon sx={{ fontSize: 18, color: '#7B1113' }} />
+                  <span>{formatDate(item.createdAt)}</span>
+                </div>
+              )}
+              {item.posterId && (
+                <div className="flex items-center gap-2.5 text-sm text-zinc-600">
+                  <PersonOutlineIcon
+                    sx={{ fontSize: 18, color: '#7B1113' }}
+                  />
+                  <span>Posted by {item.posterId}</span>
+                </div>
               )}
             </div>
 
-            {/* Reveal / Contact Info Section */}
-            <div className="bg-white rounded-xl border border-[var(--color-border)] p-4">
-              {hasRevealed ? (
-                <div className="space-y-2">
-                  <p className="text-xs font-semibold text-[var(--color-found)] uppercase tracking-wide flex items-center gap-1">
-                    <VisibilityIcon sx={{ fontSize: 14 }} /> Retrieval Details
+            <div className="pt-4 border-t border-zinc-200">
+              {!isAuthenticated ? (
+                <div className="p-4 rounded-xl bg-zinc-100 border border-zinc-200 text-center">
+                  <LockOutlinedIcon
+                    sx={{ fontSize: 24, color: '#a1a1aa' }}
+                  />
+                  <p className="text-sm text-zinc-600 mt-2 mb-3">
+                    Sign in to view retrieval details.
                   </p>
-                  {item.contactPreference && (
-                    <div className="bg-[var(--color-found-bg)] rounded-lg p-3">
-                      <p className="text-xs text-[var(--color-text-muted)]">Contact</p>
-                      <p className="font-semibold text-sm">{item.contactPreference}</p>
-                    </div>
-                  )}
-                  {item.dropoffLocation && (
-                    <div className="bg-[var(--color-found-bg)] rounded-lg p-3">
-                      <p className="text-xs text-[var(--color-text-muted)]">Drop-off Location</p>
-                      <p className="font-semibold text-sm">{item.dropoffLocation}</p>
-                    </div>
-                  )}
-                </div>
-              ) : isAuthenticated ? (
-                <div className="text-center">
-                  <LockOpenIcon sx={{ fontSize: 28, color: 'var(--color-text-muted)' }} />
-                  <p className="text-sm text-[var(--color-text-muted)] mt-2">
-                    Contact info is hidden for privacy.
-                  </p>
-                  <Button
-                    variant="contained"
-                    fullWidth
-                    onClick={handleReveal}
-                    disabled={revealing}
-                    startIcon={revealing ? <CircularProgress size={16} /> : <LockOpenIcon />}
-                    sx={{
-                      mt: 2,
-                      bgcolor: 'var(--color-primary)',
-                      '&:hover': { bgcolor: 'var(--color-primary-dark)' },
-                      boxShadow: '0 2px 8px rgba(26,86,219,0.25)',
-                    }}
+                  <button
+                    onClick={() => setShowLoginModal(true)}
+                    className="inline-flex px-5 py-2.5 rounded-xl text-sm font-semibold bg-maroon-900 text-white hover:bg-maroon-800 transition-all cursor-pointer"
                   >
-                    {revealing ? 'Revealing...' : 'Reveal Details'}
-                  </Button>
-                  <p className="text-[10px] text-[var(--color-text-muted)] mt-2">
-                    This action is logged for security purposes.
-                  </p>
+                    Sign In to Reveal
+                  </button>
+                </div>
+              ) : revealed && revealData ? (
+                <div className="p-4 rounded-xl bg-gold-50 border border-gold-200 animate-fade-in-up">
+                  <div className="flex items-center gap-2 mb-3">
+                    <LockOpenIcon sx={{ fontSize: 18, color: '#C9A227' }} />
+                    <span className="text-sm font-semibold text-gold-800">
+                      Retrieval Details Revealed
+                    </span>
+                  </div>
+                  <div className="space-y-2 text-sm text-zinc-700">
+                    {item.contactPreference && (
+                      <p>
+                        <span className="font-medium">Contact:</span>{' '}
+                        {item.contactPreference}
+                      </p>
+                    )}
+                    {item.dropoffLocation && (
+                      <p>
+                        <span className="font-medium">Drop-off:</span>{' '}
+                        {item.dropoffLocation}
+                      </p>
+                    )}
+                    {revealData?.email && (
+                      <p>
+                        <span className="font-medium">Email:</span>{' '}
+                        {revealData.email}
+                      </p>
+                    )}
+                    {revealData?.firstname && (
+                      <p>
+                        <span className="font-medium">Posted by:</span>{' '}
+                        {revealData.firstname} {revealData.lastname}
+                      </p>
+                    )}
+                  </div>
                 </div>
               ) : (
-                <div className="text-center">
-                  <LockOpenIcon sx={{ fontSize: 28, color: 'var(--color-text-muted)' }} />
-                  <p className="text-sm text-[var(--color-text-muted)] mt-2">
-                    Log in to view contact details.
-                  </p>
-                  <Link to="/login">
-                    <Button variant="outlined" fullWidth sx={{ mt: 2 }}>
-                      Log In to View
-                    </Button>
-                  </Link>
-                </div>
+                <button
+                  onClick={handleReveal}
+                  disabled={revealing}
+                  className="w-full py-3.5 rounded-xl text-sm font-semibold bg-gold-500 text-maroon-950 hover:bg-gold-400 active:scale-[0.98] transition-all duration-200 shadow-[0_2px_12px_rgba(201,162,39,0.3)] disabled:opacity-60 cursor-pointer"
+                >
+                  {revealing ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <span className="w-4 h-4 border-2 border-maroon-950/30 border-t-maroon-950 rounded-full animate-spin" />
+                      Revealing...
+                    </span>
+                  ) : (
+                    <span className="flex items-center justify-center gap-2">
+                      <LockOpenIcon sx={{ fontSize: 18 }} />
+                      Reveal Contact / Drop-off Info
+                    </span>
+                  )}
+                </button>
               )}
             </div>
 
-            {/* Owner Actions */}
             {isOwner && (
-              <div className="flex gap-2">
-                <Button
-                  variant="outlined"
-                  startIcon={<EditIcon />}
-                  fullWidth
-                  onClick={() => navigate(`/items/${id}/edit`)}
-                  sx={{ borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
+              <div className="flex gap-3 pt-2">
+                <Link
+                  to={`/items/${item.id}/edit`}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium border border-zinc-300 text-zinc-700 hover:bg-zinc-50 hover:border-zinc-400 transition-all"
                 >
+                  <EditOutlinedIcon sx={{ fontSize: 16 }} />
                   Edit
-                </Button>
-                <Button
-                  variant="outlined"
-                  startIcon={<DeleteIcon />}
-                  fullWidth
-                  onClick={() => setDeleteDialogOpen(true)}
-                  sx={{ borderColor: 'var(--color-error)', color: 'var(--color-error)' }}
+                </Link>
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium border border-maroon-200 text-maroon-700 hover:bg-maroon-50 hover:border-maroon-300 transition-all cursor-pointer"
                 >
+                  <DeleteOutlineIcon sx={{ fontSize: 16 }} />
                   Delete
-                </Button>
+                </button>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Delete Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Delete this item?</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            This action is permanent. The item will be removed from the feed and database.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleDelete} color="error" variant="contained">Delete</Button>
-        </DialogActions>
-      </Dialog>
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl animate-fade-in-up">
+            <h3 className="text-lg font-bold text-zinc-900 mb-2">
+              Delete this item?
+            </h3>
+            <p className="text-sm text-zinc-500 mb-6">
+              This action is permanent and cannot be undone. The item will be
+              removed from the campus feed.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 py-2.5 rounded-xl text-sm font-medium border border-zinc-300 text-zinc-700 hover:bg-zinc-50 transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-maroon-900 text-white hover:bg-maroon-800 transition-all disabled:opacity-60 cursor-pointer"
+              >
+                {deleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <LoginModal
+        open={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+      />
     </div>
   );
 }

@@ -2,6 +2,7 @@ package edu.cit.taghoy.lostlink.controller;
 
 import edu.cit.taghoy.lostlink.dto.ApiResponse;
 import edu.cit.taghoy.lostlink.dto.AuthResponseData;
+import edu.cit.taghoy.lostlink.dto.GoogleTokenRequest;
 import edu.cit.taghoy.lostlink.dto.LoginRequest;
 import edu.cit.taghoy.lostlink.dto.RegisterRequest;
 import edu.cit.taghoy.lostlink.dto.UserDTO;
@@ -9,11 +10,14 @@ import edu.cit.taghoy.lostlink.model.User;
 import edu.cit.taghoy.lostlink.security.CustomUserDetails;
 import edu.cit.taghoy.lostlink.security.JwtService;
 import edu.cit.taghoy.lostlink.service.AuthService;
+import edu.cit.taghoy.lostlink.service.GoogleOAuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.Optional;
 
 /**
@@ -32,10 +36,16 @@ public class AuthController {
 
     private final AuthService authService;
     private final JwtService jwtService;
+    private final GoogleOAuthService googleOAuthService;
 
-    public AuthController(AuthService authService, JwtService jwtService) {
+    public AuthController(
+            AuthService authService,
+            JwtService jwtService,
+            GoogleOAuthService googleOAuthService
+    ) {
         this.authService = authService;
         this.jwtService = jwtService;
+        this.googleOAuthService = googleOAuthService;
     }
 
     /**
@@ -87,6 +97,39 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.error("AUTH-001", "Invalid credentials",
                         "Student ID, Email, or password is incorrect."));
+    }
+
+    /**
+     * POST /api/auth/google
+     *
+     * Accepts a Google ID token from the client (GIS), verifies it with Google,
+     * links or creates a user, and returns the same payload as email/password login.
+     */
+    @PostMapping("/google")
+    public ResponseEntity<ApiResponse<Object>> googleLogin(@Valid @RequestBody GoogleTokenRequest request) {
+        try {
+            Optional<User> userOpt = googleOAuthService.authenticateWithGoogleIdToken(request.getToken());
+
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponse.error("AUTH-002", "Google sign-in failed",
+                                "Invalid token, unverified email, or OAuth is not configured."));
+            }
+
+            User user = userOpt.get();
+            String jwtToken = jwtService.generateToken(new CustomUserDetails(user));
+
+            AuthResponseData data = AuthResponseData.builder()
+                    .user(UserDTO.fromEntity(user))
+                    .accessToken(jwtToken)
+                    .build();
+
+            return ResponseEntity.ok(ApiResponse.ok(data));
+        } catch (GeneralSecurityException | IOException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("AUTH-002", "Google sign-in failed",
+                            "Could not verify token with Google."));
+        }
     }
 
     /**

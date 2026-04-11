@@ -1,166 +1,382 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import Navbar from '../components/Navbar';
 import ItemService from '../services/ItemService';
 import CategoryService from '../services/CategoryService';
-import Navbar from '../components/Navbar';
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import Alert from '@mui/material/Alert';
-import ToggleButton from '@mui/material/ToggleButton';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
-import CircularProgress from '@mui/material/CircularProgress';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlineOutlined';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutlined';
 
 export default function EditItem() {
   const { id } = useParams();
   const navigate = useNavigate();
+
   const [categories, setCategories] = useState([]);
   const [form, setForm] = useState({
     title: '',
     description: '',
-    status: 'FOUND',
-    currentStatus: 'HOLDING',
     location: '',
+    categoryId: '',
+    status: 'LOST',
+    currentStatus: '',
     dropoffLocation: '',
     contactPreference: '',
-    categoryId: '',
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    loadData();
-  }, [id]);
+    const load = async () => {
+      try {
+        const [itemRes, catRes] = await Promise.all([
+          ItemService.getItemById(id),
+          CategoryService.getAll(),
+        ]);
 
-  const loadData = async () => {
-    try {
-      const [itemRes, catRes] = await Promise.all([
-        ItemService.getItemById(id),
-        CategoryService.getAll(),
-      ]);
-      if (catRes.success) setCategories(catRes.data);
-      if (itemRes.success) {
-        const item = itemRes.data;
+        const item = itemRes.data || itemRes;
+        setCategories(catRes.data || catRes || []);
+
         setForm({
           title: item.title || '',
           description: item.description || '',
-          status: item.status || 'FOUND',
-          currentStatus: item.currentStatus || 'HOLDING',
           location: item.location || '',
+          categoryId: item.categoryId || '',
+          status: item.status || 'LOST',
+          currentStatus: item.currentStatus || '',
           dropoffLocation: item.dropoffLocation || '',
           contactPreference: item.contactPreference || '',
-          categoryId: item.categoryId || '',
         });
+      } catch {
+        setError('Failed to load item data.');
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      setError('Failed to load item.');
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+    load();
+  }, [id]);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+    if (fieldErrors[name]) {
+      setFieldErrors({ ...fieldErrors, [name]: undefined });
+    }
+    if (error) setError('');
+  };
+
+  const validate = () => {
+    const errs = {};
+    if (!form.title.trim()) errs.title = 'Title is required.';
+    if (!form.description.trim()) errs.description = 'Description is required.';
+    if (!form.location.trim()) errs.location = 'Location is required.';
+    if (!form.categoryId) errs.categoryId = 'Select a category.';
+    if (!form.currentStatus) errs.currentStatus = 'Select item disposition.';
+
+    if (form.currentStatus === 'SURRENDERED' && !form.dropoffLocation.trim()) {
+      errs.dropoffLocation = 'Specify where the item was surrendered.';
+    }
+    if (form.currentStatus === 'HOLDING' && !form.contactPreference.trim()) {
+      errs.contactPreference = 'Provide your contact info.';
+    }
+    return errs;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    const errs = validate();
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs);
+      return;
+    }
+
     setSaving(true);
+    setError('');
+
     try {
-      const res = await ItemService.updateItem(id, form);
-      if (res.success) {
-        setSuccess('Item updated! Redirecting...');
-        setTimeout(() => navigate(`/items/${id}`), 1200);
+      const payload = {
+        title: form.title.trim(),
+        description: form.description.trim(),
+        location: form.location.trim(),
+        categoryId: Number(form.categoryId),
+        status: form.status,
+        currentStatus: form.currentStatus,
+      };
+
+      if (form.currentStatus === 'SURRENDERED') {
+        payload.dropoffLocation = form.dropoffLocation.trim();
       }
+      if (form.currentStatus === 'HOLDING') {
+        payload.contactPreference = form.contactPreference.trim();
+      }
+
+      await ItemService.updateItem(id, payload);
+      setSuccess(true);
+      setTimeout(() => navigate(`/items/${id}`), 1500);
     } catch (err) {
-      const data = err.response?.data;
-      setError(data?.error?.details || data?.error?.message || 'Failed to update item.');
+      setError(
+        err.response?.data?.error?.message || 'Failed to update. Try again.'
+      );
     } finally {
       setSaving(false);
     }
   };
 
+  const inputClass = (field) =>
+    `w-full px-4 py-3 rounded-xl border bg-white text-sm text-zinc-900 placeholder:text-zinc-400 transition-all duration-200 hover:border-zinc-400 focus:border-maroon-600 focus:ring-2 focus:ring-maroon-100 ${
+      fieldErrors[field]
+        ? 'border-maroon-400 bg-maroon-50/30'
+        : 'border-zinc-300'
+    }`;
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-[var(--color-bg)]">
+      <div className="min-h-[100dvh] bg-stone-50">
         <Navbar />
-        <div className="flex justify-center py-20">
-          <CircularProgress sx={{ color: 'var(--color-primary)' }} />
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-8">
+          <div className="space-y-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="h-14 rounded-xl animate-shimmer" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (success) {
+    return (
+      <div className="min-h-[100dvh] bg-stone-50">
+        <Navbar />
+        <div className="flex items-center justify-center py-32">
+          <div className="text-center space-y-4 animate-fade-in-up">
+            <div className="w-16 h-16 mx-auto rounded-full bg-emerald-100 flex items-center justify-center">
+              <CheckCircleOutlineIcon sx={{ fontSize: 36, color: '#166534' }} />
+            </div>
+            <h2 className="text-2xl font-bold text-zinc-900">Item Updated</h2>
+            <p className="text-sm text-zinc-500">Redirecting to item page...</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)]">
+    <div className="min-h-[100dvh] bg-stone-50">
       <Navbar />
 
-      <div className="max-w-2xl mx-auto px-4 md:px-8 py-8">
-        <Button
-          startIcon={<ArrowBackIcon />}
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-8 pb-16">
+        <button
           onClick={() => navigate(-1)}
-          sx={{ mb: 3, color: 'var(--color-text-secondary)' }}
+          className="flex items-center gap-1.5 text-sm font-medium text-zinc-500 hover:text-zinc-700 transition-colors mb-6 cursor-pointer"
         >
+          <ArrowBackIcon sx={{ fontSize: 18 }} />
           Back
-        </Button>
+        </button>
 
-        <h1 className="text-2xl font-bold text-[var(--color-text)] mb-6">Edit Item</h1>
+        <div className="mb-8 animate-fade-in-up">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tighter text-zinc-900">
+            Edit Report
+          </h1>
+          <p className="mt-1.5 text-sm text-zinc-500">
+            Update the details of your lost or found report.
+          </p>
+        </div>
 
-        {error && <Alert severity="error" sx={{ mb: 3, borderRadius: '12px' }}>{error}</Alert>}
-        {success && <Alert severity="success" sx={{ mb: 3, borderRadius: '12px' }}>{success}</Alert>}
+        {error && (
+          <div className="mb-6 flex items-start gap-2.5 p-3.5 rounded-xl bg-maroon-50 border border-maroon-200 text-sm text-maroon-800 animate-fade-in-up">
+            <ErrorOutlineIcon sx={{ fontSize: 18, marginTop: '1px' }} />
+            <span>{error}</span>
+          </div>
+        )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="bg-white rounded-2xl border border-[var(--color-border)] p-6 space-y-5">
-            <TextField label="Item Name" name="title" value={form.title} onChange={handleChange} fullWidth required size="small" />
-            <TextField label="Description" name="description" value={form.description} onChange={handleChange} fullWidth multiline rows={3} size="small" />
-            <FormControl fullWidth size="small" required>
-              <InputLabel>Category</InputLabel>
-              <Select name="categoryId" value={form.categoryId} onChange={handleChange} label="Category">
-                {categories.map((cat) => (
-                  <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <TextField label="Location" name="location" value={form.location} onChange={handleChange} fullWidth required size="small" />
+        <form onSubmit={handleSubmit} className="space-y-6 animate-fade-in-up stagger-1">
+          <div className="flex gap-3">
+            {['LOST', 'FOUND'].map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setForm({ ...form, status: s })}
+                className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer ${
+                  form.status === s
+                    ? s === 'LOST'
+                      ? 'bg-maroon-900 text-white shadow-[0_2px_12px_rgba(123,17,19,0.25)]'
+                      : 'bg-emerald-700 text-white shadow-[0_2px_12px_rgba(22,101,52,0.25)]'
+                    : 'bg-white border border-zinc-300 text-zinc-600 hover:border-zinc-400'
+                }`}
+              >
+                {s}
+              </button>
+            ))}
           </div>
 
-          <div className="bg-white rounded-2xl border border-[var(--color-border)] p-6 space-y-5">
-            <div>
-              <label className="block text-sm font-semibold text-[var(--color-text)] mb-2">Status</label>
-              <ToggleButtonGroup value={form.status} exclusive onChange={(_, v) => v && setForm({ ...form, status: v })} fullWidth size="small"
-                sx={{ '& .MuiToggleButton-root': { textTransform: 'none', '&.Mui-selected': { bgcolor: form.status === 'LOST' ? 'var(--color-lost)' : 'var(--color-found)', color: 'white' } } }}>
-                <ToggleButton value="LOST">🔍 Lost</ToggleButton>
-                <ToggleButton value="FOUND">📦 Found</ToggleButton>
-              </ToggleButtonGroup>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-[var(--color-text)] mb-2">Current Item Status</label>
-              <ToggleButtonGroup value={form.currentStatus} exclusive onChange={(_, v) => v && setForm({ ...form, currentStatus: v })} fullWidth size="small"
-                sx={{ '& .MuiToggleButton-root': { textTransform: 'none', '&.Mui-selected': { bgcolor: 'var(--color-primary)', color: 'white' } } }}>
-                <ToggleButton value="HOLDING">🤝 Holding</ToggleButton>
-                <ToggleButton value="SURRENDERED">🏢 Surrendered</ToggleButton>
-              </ToggleButtonGroup>
-            </div>
-
-            {form.currentStatus === 'HOLDING' ? (
-              <TextField label="Contact Preference" name="contactPreference" value={form.contactPreference} onChange={handleChange} fullWidth size="small" />
-            ) : (
-              <TextField label="Drop-off Location" name="dropoffLocation" value={form.dropoffLocation} onChange={handleChange} fullWidth size="small" />
+          <div className="space-y-1.5">
+            <label htmlFor="title" className="block text-sm font-medium text-zinc-700">
+              Item Title
+            </label>
+            <input
+              id="title"
+              name="title"
+              value={form.title}
+              onChange={handleChange}
+              className={inputClass('title')}
+            />
+            {fieldErrors.title && (
+              <p className="text-xs text-maroon-600">{fieldErrors.title}</p>
             )}
           </div>
 
-          <Button type="submit" variant="contained" fullWidth disabled={saving} size="large"
-            sx={{ bgcolor: 'var(--color-primary)', '&:hover': { bgcolor: 'var(--color-primary-dark)' }, py: 1.5 }}>
-            {saving ? 'Saving...' : 'Save Changes'}
-          </Button>
+          <div className="space-y-1.5">
+            <label htmlFor="description" className="block text-sm font-medium text-zinc-700">
+              Description
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+              rows={3}
+              className={`${inputClass('description')} resize-none`}
+            />
+            {fieldErrors.description && (
+              <p className="text-xs text-maroon-600">{fieldErrors.description}</p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label htmlFor="location" className="block text-sm font-medium text-zinc-700">
+                Location
+              </label>
+              <input
+                id="location"
+                name="location"
+                value={form.location}
+                onChange={handleChange}
+                className={inputClass('location')}
+              />
+              {fieldErrors.location && (
+                <p className="text-xs text-maroon-600">{fieldErrors.location}</p>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <label htmlFor="categoryId" className="block text-sm font-medium text-zinc-700">
+                Category
+              </label>
+              <select
+                id="categoryId"
+                name="categoryId"
+                value={form.categoryId}
+                onChange={handleChange}
+                className={inputClass('categoryId')}
+              >
+                <option value="">Select category</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name || cat.categoryName}
+                  </option>
+                ))}
+              </select>
+              {fieldErrors.categoryId && (
+                <p className="text-xs text-maroon-600">{fieldErrors.categoryId}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium text-zinc-700">
+              Item Disposition
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[
+                { value: 'HOLDING', label: "I'm holding it" },
+                { value: 'SURRENDERED', label: 'Surrendered to office' },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() =>
+                    setForm({ ...form, currentStatus: opt.value })
+                  }
+                  className={`text-left p-3.5 rounded-xl border transition-all duration-200 cursor-pointer ${
+                    form.currentStatus === opt.value
+                      ? 'border-maroon-600 bg-maroon-50/50 ring-1 ring-maroon-200'
+                      : 'border-zinc-300 bg-white hover:border-zinc-400'
+                  }`}
+                >
+                  <span className="block text-sm font-medium text-zinc-900">
+                    {opt.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+            {fieldErrors.currentStatus && (
+              <p className="text-xs text-maroon-600">{fieldErrors.currentStatus}</p>
+            )}
+          </div>
+
+          {form.currentStatus === 'SURRENDERED' && (
+            <div className="space-y-1.5 animate-fade-in-up">
+              <label htmlFor="dropoffLocation" className="block text-sm font-medium text-zinc-700">
+                Drop-off Location
+              </label>
+              <input
+                id="dropoffLocation"
+                name="dropoffLocation"
+                value={form.dropoffLocation}
+                onChange={handleChange}
+                className={inputClass('dropoffLocation')}
+              />
+              {fieldErrors.dropoffLocation && (
+                <p className="text-xs text-maroon-600">{fieldErrors.dropoffLocation}</p>
+              )}
+            </div>
+          )}
+
+          {form.currentStatus === 'HOLDING' && (
+            <div className="space-y-1.5 animate-fade-in-up">
+              <label htmlFor="contactPreference" className="block text-sm font-medium text-zinc-700">
+                Contact Preference
+              </label>
+              <input
+                id="contactPreference"
+                name="contactPreference"
+                value={form.contactPreference}
+                onChange={handleChange}
+                className={inputClass('contactPreference')}
+              />
+              {fieldErrors.contactPreference && (
+                <p className="text-xs text-maroon-600">{fieldErrors.contactPreference}</p>
+              )}
+            </div>
+          )}
+
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="flex-1 py-3 rounded-xl text-sm font-medium border border-zinc-300 text-zinc-700 hover:bg-zinc-50 transition-all cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="flex-1 py-3 rounded-xl text-sm font-semibold bg-gold-500 text-maroon-950 hover:bg-gold-400 active:scale-[0.98] transition-all duration-200 shadow-[0_2px_12px_rgba(201,162,39,0.3)] disabled:opacity-60 cursor-pointer"
+            >
+              {saving ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-4 h-4 border-2 border-maroon-950/30 border-t-maroon-950 rounded-full animate-spin" />
+                  Saving...
+                </span>
+              ) : (
+                'Save Changes'
+              )}
+            </button>
+          </div>
         </form>
       </div>
     </div>

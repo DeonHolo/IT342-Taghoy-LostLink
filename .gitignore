@@ -37,6 +37,8 @@ node_modules/
 dist/
 .env.local
 .env.*.local
+web/.env
+backend/.env
 *.log
 
 ### Android/Mobile ###

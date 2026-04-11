@@ -1,177 +1,202 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import AppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
-import Button from '@mui/material/Button';
-import IconButton from '@mui/material/IconButton';
-import Avatar from '@mui/material/Avatar';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import Divider from '@mui/material/Divider';
-import AddIcon from '@mui/icons-material/Add';
-import LogoutIcon from '@mui/icons-material/Logout';
-import PersonIcon from '@mui/icons-material/Person';
-import ArticleIcon from '@mui/icons-material/Article';
+import LoginModal from './LoginModal';
+import MenuIcon from '@mui/icons-material/Menu';
+import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutlineOutlined';
+import ListAltIcon from '@mui/icons-material/ListAlt';
+import LogoutIcon from '@mui/icons-material/Logout';
+import PersonOutlineIcon from '@mui/icons-material/PersonOutlineOutlined';
 
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
-  const navigate = useNavigate();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
   const location = useLocation();
-  const [anchorEl, setAnchorEl] = useState(null);
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
-    setAnchorEl(null);
-    navigate('/login');
+    setMobileOpen(false);
+    navigate('/feed');
   };
 
   const isActive = (path) => location.pathname === path;
 
+  const navLinkClass = (path) =>
+    `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+      isActive(path)
+        ? 'bg-white/15 text-gold-300'
+        : 'text-maroon-100 hover:bg-white/10 hover:text-white'
+    }`;
+
   return (
-    <AppBar
-      position="sticky"
-      elevation={0}
-      sx={{
-        background: 'rgba(255,255,255,0.85)',
-        backdropFilter: 'blur(16px)',
-        borderBottom: '1px solid var(--color-border)',
-      }}
-    >
-      <Toolbar sx={{ justifyContent: 'space-between', maxWidth: 1280, width: '100%', mx: 'auto', px: { xs: 2, md: 4 } }}>
-        {/* Logo */}
-        <Link to="/feed" className="no-underline flex items-center gap-2">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-[var(--color-primary)] flex items-center justify-center">
-              <SearchIcon sx={{ color: 'white', fontSize: 18 }} />
+    <nav className="sticky top-0 z-40 bg-maroon-900 shadow-[0_4px_24px_rgba(123,17,19,0.3)]">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
+        <div className="flex items-center justify-between h-16">
+          <Link
+            to="/feed"
+            className="flex items-center gap-2.5 group"
+          >
+            <div className="w-9 h-9 rounded-xl bg-gold-500 flex items-center justify-center shadow-[0_2px_8px_rgba(201,162,39,0.4)] transition-transform duration-300 group-hover:scale-105">
+              <SearchIcon sx={{ fontSize: 20, color: '#44080a' }} />
             </div>
-            <span className="text-xl font-bold text-[var(--color-primary-dark)] tracking-tight">
-              Lost<span className="text-[var(--color-primary)]">Link</span>
-            </span>
-          </div>
-        </Link>
-
-        {/* Nav Links */}
-        <div className="hidden md:flex items-center gap-1">
-          <Link to="/feed">
-            <Button
-              size="small"
-              sx={{
-                color: isActive('/feed') ? 'var(--color-primary)' : 'var(--color-text-secondary)',
-                fontWeight: isActive('/feed') ? 700 : 500,
-                bgcolor: isActive('/feed') ? 'var(--color-primary-light)/10' : 'transparent',
-                '&:hover': { bgcolor: 'var(--color-bg)' }
-              }}
-            >
-              Feed
-            </Button>
+            <div className="flex flex-col">
+              <span className="text-lg font-bold tracking-tight text-white leading-none">
+                LostLink
+              </span>
+              <span className="text-[10px] font-medium tracking-widest uppercase text-gold-400/80 leading-none mt-0.5">
+                CIT-U
+              </span>
+            </div>
           </Link>
-          {isAuthenticated && (
-            <>
-              <Link to="/post">
-                <Button
-                  size="small"
-                  sx={{
-                    color: isActive('/post') ? 'var(--color-primary)' : 'var(--color-text-secondary)',
-                    fontWeight: isActive('/post') ? 700 : 500,
-                    bgcolor: isActive('/post') ? 'var(--color-primary-light)/10' : 'transparent',
-                    '&:hover': { bgcolor: 'var(--color-bg)' }
-                  }}
-                >
+
+          <div className="hidden md:flex items-center gap-1">
+            <Link to="/feed" className={navLinkClass('/feed')}>
+              <SearchIcon sx={{ fontSize: 18 }} />
+              Feed
+            </Link>
+
+            {isAuthenticated && (
+              <>
+                <Link to="/post" className={navLinkClass('/post')}>
+                  <AddCircleOutlineIcon sx={{ fontSize: 18 }} />
                   Report Item
-                </Button>
-              </Link>
-              <Link to="/my-posts">
-                <Button
-                  size="small"
-                  sx={{
-                    color: isActive('/my-posts') ? 'var(--color-primary)' : 'var(--color-text-secondary)',
-                    fontWeight: isActive('/my-posts') ? 700 : 500,
-                    bgcolor: isActive('/my-posts') ? 'var(--color-primary-light)/10' : 'transparent',
-                    '&:hover': { bgcolor: 'var(--color-bg)' }
-                  }}
-                >
+                </Link>
+                <Link to="/my-posts" className={navLinkClass('/my-posts')}>
+                  <ListAltIcon sx={{ fontSize: 18 }} />
                   My Posts
-                </Button>
-              </Link>
-            </>
-          )}
+                </Link>
+              </>
+            )}
+          </div>
+
+          <div className="hidden md:flex items-center gap-3">
+            {isAuthenticated ? (
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10">
+                  <div className="w-7 h-7 rounded-full bg-gold-500/20 border border-gold-500/40 flex items-center justify-center">
+                    <PersonOutlineIcon sx={{ fontSize: 16, color: '#e6bb3a' }} />
+                  </div>
+                  <span className="text-sm font-medium text-maroon-100">
+                    {user?.firstName || 'User'}
+                  </span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-maroon-200 hover:bg-white/10 hover:text-white transition-all duration-200 cursor-pointer"
+                >
+                  <LogoutIcon sx={{ fontSize: 16 }} />
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setLoginModalOpen(true)}
+                  className="px-4 py-2 rounded-lg text-sm font-medium text-maroon-100 hover:bg-white/10 hover:text-white transition-all duration-200 cursor-pointer"
+                >
+                  Sign In
+                </button>
+                <Link
+                  to="/register"
+                  className="px-4 py-2 rounded-lg text-sm font-semibold bg-gold-500 text-maroon-950 hover:bg-gold-400 transition-all duration-200 shadow-[0_2px_8px_rgba(201,162,39,0.3)] active:scale-[0.98]"
+                >
+                  Register
+                </Link>
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="md:hidden p-2 rounded-lg text-maroon-100 hover:bg-white/10 transition-colors cursor-pointer"
+          >
+            {mobileOpen ? (
+              <CloseIcon sx={{ fontSize: 24 }} />
+            ) : (
+              <MenuIcon sx={{ fontSize: 24 }} />
+            )}
+          </button>
         </div>
 
-        {/* Right Side */}
-        <div className="flex items-center gap-2">
-          {isAuthenticated ? (
-            <>
-              <Link to="/post">
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  size="small"
-                  sx={{
-                    bgcolor: 'var(--color-primary)',
-                    '&:hover': { bgcolor: 'var(--color-primary-dark)' },
-                    display: { xs: 'none', sm: 'flex' },
-                    boxShadow: '0 2px 8px rgba(26,86,219,0.25)',
-                  }}
-                >
-                  Post Item
-                </Button>
-              </Link>
-              <IconButton onClick={(e) => setAnchorEl(e.currentTarget)} size="small">
-                <Avatar
-                  sx={{
-                    width: 36,
-                    height: 36,
-                    bgcolor: 'var(--color-primary)',
-                    fontSize: 14,
-                    fontWeight: 700,
-                  }}
-                >
-                  {user?.firstName?.[0]}{user?.lastName?.[0]}
-                </Avatar>
-              </IconButton>
-              <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={() => setAnchorEl(null)}
-                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                slotProps={{ paper: { sx: { mt: 1.5, minWidth: 200, borderRadius: '12px !important' } } }}
+        {mobileOpen && (
+          <div className="md:hidden pb-4 pt-2 border-t border-white/10 animate-fade-in-up">
+            <div className="flex flex-col gap-1">
+              <Link
+                to="/feed"
+                onClick={() => setMobileOpen(false)}
+                className={navLinkClass('/feed')}
               >
-                <div className="px-4 py-2">
-                  <p className="font-semibold text-sm">{user?.firstName} {user?.lastName}</p>
-                  <p className="text-xs text-[var(--color-text-muted)]">{user?.email}</p>
-                </div>
-                <Divider />
-                <MenuItem onClick={() => { setAnchorEl(null); navigate('/my-posts'); }}>
-                  <ListItemIcon><ArticleIcon fontSize="small" /></ListItemIcon>
-                  My Posts
-                </MenuItem>
-                <Divider />
-                <MenuItem onClick={handleLogout}>
-                  <ListItemIcon><LogoutIcon fontSize="small" /></ListItemIcon>
-                  Logout
-                </MenuItem>
-              </Menu>
-            </>
-          ) : (
-            <div className="flex gap-2">
-              <Link to="/login">
-                <Button variant="outlined" size="small" sx={{ borderColor: 'var(--color-border)', color: 'var(--color-text)' }}>
-                  Log In
-                </Button>
+                <SearchIcon sx={{ fontSize: 18 }} />
+                Feed
               </Link>
-              <Link to="/register">
-                <Button variant="contained" size="small" sx={{ bgcolor: 'var(--color-primary)', '&:hover': { bgcolor: 'var(--color-primary-dark)' } }}>
-                  Sign Up
-                </Button>
-              </Link>
+
+              {isAuthenticated && (
+                <>
+                  <Link
+                    to="/post"
+                    onClick={() => setMobileOpen(false)}
+                    className={navLinkClass('/post')}
+                  >
+                    <AddCircleOutlineIcon sx={{ fontSize: 18 }} />
+                    Report Item
+                  </Link>
+                  <Link
+                    to="/my-posts"
+                    onClick={() => setMobileOpen(false)}
+                    className={navLinkClass('/my-posts')}
+                  >
+                    <ListAltIcon sx={{ fontSize: 18 }} />
+                    My Posts
+                  </Link>
+                </>
+              )}
+
+              <div className="border-t border-white/10 mt-2 pt-2">
+                {isAuthenticated ? (
+                  <>
+                    <div className="flex items-center gap-2 px-3 py-2 text-sm text-maroon-100">
+                      <PersonOutlineIcon sx={{ fontSize: 18, color: '#e6bb3a' }} />
+                      {user?.firstName} {user?.lastName}
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm font-medium text-maroon-200 hover:bg-white/10 hover:text-white transition-all cursor-pointer"
+                    >
+                      <LogoutIcon sx={{ fontSize: 18 }} />
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <div className="flex flex-col gap-2 px-1">
+                    <button
+                      onClick={() => { setMobileOpen(false); setLoginModalOpen(true); }}
+                      className="px-3 py-2.5 rounded-lg text-sm font-medium text-center text-maroon-100 hover:bg-white/10 transition-all cursor-pointer"
+                    >
+                      Sign In
+                    </button>
+                    <Link
+                      to="/register"
+                      onClick={() => setMobileOpen(false)}
+                      className="px-3 py-2.5 rounded-lg text-sm font-semibold text-center bg-gold-500 text-maroon-950 hover:bg-gold-400 transition-all"
+                    >
+                      Register
+                    </Link>
+                  </div>
+                )}
+              </div>
             </div>
-          )}
-        </div>
-      </Toolbar>
-    </AppBar>
+          </div>
+        )}
+      </div>
+
+      <LoginModal
+        open={loginModalOpen}
+        onClose={() => setLoginModalOpen(false)}
+      />
+    </nav>
   );
 }

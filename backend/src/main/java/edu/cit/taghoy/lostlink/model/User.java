@@ -33,6 +33,10 @@ public class User {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
+    /** Google account subject (`sub` claim); links OAuth logins to this user. */
+    @Column(name = "google_sub", unique = true, length = 255)
+    private String googleSub;
+
     @Column(name = "contact_preference")
     private String contactPreference;
 

@@ -1,183 +1,156 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import ItemService from '../services/ItemService';
 import Navbar from '../components/Navbar';
-import Chip from '@mui/material/Chip';
-import Button from '@mui/material/Button';
-import CircularProgress from '@mui/material/CircularProgress';
-import IconButton from '@mui/material/IconButton';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogTitle from '@mui/material/DialogTitle';
+import ItemCard, { ItemCardSkeleton } from '../components/ItemCard';
+import ItemService from '../services/ItemService';
 import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import PlaceIcon from '@mui/icons-material/Place';
-
-const API_BASE = 'http://localhost:8080';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlineOutlined';
+import InboxOutlinedIcon from '@mui/icons-material/InboxOutlined';
 
 export default function MyPosts() {
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [deleteId, setDeleteId] = useState(null);
+  const [error, setError] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
 
   useEffect(() => {
-    loadMyPosts();
+    const fetchItems = async () => {
+      try {
+        setLoading(true);
+        const data = await ItemService.getMyPosts();
+        setItems(data.data || data || []);
+      } catch {
+        setError('Failed to load your posts.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchItems();
   }, []);
 
-  const loadMyPosts = async () => {
-    setLoading(true);
-    try {
-      const res = await ItemService.getMyPosts();
-      if (res.success) setItems(res.data);
-    } catch (err) {
-      console.error('Failed to load posts', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const filteredItems = statusFilter
+    ? items.filter((item) => item.status === statusFilter)
+    : items;
 
-  const handleDelete = async () => {
-    if (!deleteId) return;
-    try {
-      await ItemService.deleteItem(deleteId);
-      setItems(items.filter((i) => i.id !== deleteId));
-    } catch (err) {
-      console.error('Failed to delete item', err);
-    }
-    setDeleteId(null);
-  };
+  const lostCount = items.filter((i) => i.status === 'LOST').length;
+  const foundCount = items.filter((i) => i.status === 'FOUND').length;
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg)]">
+    <div className="min-h-[100dvh] bg-stone-50">
       <Navbar />
 
-      <div className="max-w-4xl mx-auto px-4 md:px-8 py-8">
-        <div className="flex items-center justify-between mb-6">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 pt-8 pb-16">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8 animate-fade-in-up">
           <div>
-            <h1 className="text-2xl font-bold text-[var(--color-text)]">My Posts</h1>
-            <p className="text-sm text-[var(--color-text-muted)] mt-1">Manage your reported items.</p>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tighter text-zinc-900">
+              My Reports
+            </h1>
+            <p className="mt-1.5 text-sm text-zinc-500">
+              Manage all your lost and found reports.
+            </p>
           </div>
-          <Link to="/post">
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              sx={{
-                bgcolor: 'var(--color-primary)',
-                '&:hover': { bgcolor: 'var(--color-primary-dark)' },
-                boxShadow: '0 2px 8px rgba(26,86,219,0.25)',
-              }}
-            >
-              New Post
-            </Button>
-          </Link>
+          <button
+            onClick={() => navigate('/post')}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-gold-500 text-maroon-950 hover:bg-gold-400 active:scale-[0.98] transition-all duration-200 shadow-[0_2px_12px_rgba(201,162,39,0.3)] cursor-pointer"
+          >
+            <AddIcon sx={{ fontSize: 18 }} />
+            New Report
+          </button>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3 mb-6 animate-fade-in-up stagger-1">
+          <button
+            onClick={() => setStatusFilter('')}
+            className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              !statusFilter
+                ? 'bg-maroon-900 text-white shadow-sm'
+                : 'bg-white border border-zinc-200 text-zinc-600 hover:border-zinc-300'
+            }`}
+          >
+            All ({items.length})
+          </button>
+          <button
+            onClick={() => setStatusFilter('LOST')}
+            className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              statusFilter === 'LOST'
+                ? 'bg-maroon-900 text-white shadow-sm'
+                : 'bg-white border border-zinc-200 text-zinc-600 hover:border-zinc-300'
+            }`}
+          >
+            Lost ({lostCount})
+          </button>
+          <button
+            onClick={() => setStatusFilter('FOUND')}
+            className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              statusFilter === 'FOUND'
+                ? 'bg-emerald-700 text-white shadow-sm'
+                : 'bg-white border border-zinc-200 text-zinc-600 hover:border-zinc-300'
+            }`}
+          >
+            Found ({foundCount})
+          </button>
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-20">
-            <CircularProgress sx={{ color: 'var(--color-primary)' }} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <ItemCardSkeleton key={i} />
+            ))}
           </div>
-        ) : items.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-2xl border border-[var(--color-border)]">
-            <span className="text-5xl">📝</span>
-            <h3 className="text-lg font-semibold text-[var(--color-text)] mt-4">No posts yet</h3>
-            <p className="text-sm text-[var(--color-text-muted)] mt-1">
-              You haven&apos;t reported any items. Start by posting one!
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center animate-fade-in-up">
+            <div className="w-14 h-14 rounded-2xl bg-maroon-100 flex items-center justify-center mb-4">
+              <ErrorOutlineIcon sx={{ fontSize: 28, color: '#7B1113' }} />
+            </div>
+            <h3 className="text-lg font-semibold text-zinc-900 mb-1">
+              Something went wrong
+            </h3>
+            <p className="text-sm text-zinc-500 max-w-xs mb-4">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 rounded-xl text-sm font-medium bg-maroon-900 text-white hover:bg-maroon-800 transition-all cursor-pointer"
+            >
+              Try Again
+            </button>
+          </div>
+        ) : filteredItems.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center animate-fade-in-up">
+            <div className="w-14 h-14 rounded-2xl bg-zinc-100 flex items-center justify-center mb-4">
+              <InboxOutlinedIcon sx={{ fontSize: 28, color: '#a1a1aa' }} />
+            </div>
+            <h3 className="text-lg font-semibold text-zinc-900 mb-1">
+              {statusFilter
+                ? `No ${statusFilter.toLowerCase()} reports`
+                : 'No reports yet'}
+            </h3>
+            <p className="text-sm text-zinc-500 max-w-xs mb-4">
+              {statusFilter
+                ? `You don't have any ${statusFilter.toLowerCase()} items. Create one to get started.`
+                : 'You haven\'t posted any lost or found items. Start by creating your first report.'}
             </p>
-            <Link to="/post">
-              <Button variant="contained" startIcon={<AddIcon />} sx={{ mt: 3, bgcolor: 'var(--color-primary)' }}>
-                Post Your First Item
-              </Button>
+            <Link
+              to="/post"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-gold-500 text-maroon-950 hover:bg-gold-400 transition-all"
+            >
+              <AddIcon sx={{ fontSize: 18 }} />
+              Create Report
             </Link>
           </div>
         ) : (
-          <div className="space-y-3">
-            {items.map((item) => {
-              const isLost = item.status === 'LOST';
-              return (
-                <div
-                  key={item.id}
-                  className="bg-white rounded-xl border border-[var(--color-border)] p-4 flex gap-4 hover:border-[var(--color-primary-light)] transition-colors"
-                >
-                  {/* Thumbnail */}
-                  <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-[var(--color-surface-alt)]">
-                    {item.imageUrl ? (
-                      <img
-                        src={`${API_BASE}${item.imageUrl}`}
-                        alt={item.title}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-2xl">
-                        {isLost ? '🔍' : '📦'}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold text-sm text-[var(--color-text)] truncate">{item.title}</h3>
-                          <Chip
-                            label={item.status}
-                            size="small"
-                            sx={{
-                              fontWeight: 700,
-                              fontSize: '0.65rem',
-                              height: 20,
-                              bgcolor: isLost ? 'var(--color-lost)' : 'var(--color-found)',
-                              color: 'white',
-                            }}
-                          />
-                        </div>
-                        <div className="flex items-center gap-1 text-xs text-[var(--color-text-muted)] mt-1">
-                          <PlaceIcon sx={{ fontSize: 13 }} />
-                          <span>{item.location}</span>
-                          <span className="mx-1">·</span>
-                          <span>{new Date(item.createdAt).toLocaleDateString()}</span>
-                        </div>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex gap-1 flex-shrink-0">
-                        <IconButton size="small" onClick={() => navigate(`/items/${item.id}`)}>
-                          <VisibilityIcon sx={{ fontSize: 18 }} />
-                        </IconButton>
-                        <IconButton size="small" onClick={() => navigate(`/items/${item.id}/edit`)}>
-                          <EditIcon sx={{ fontSize: 18 }} />
-                        </IconButton>
-                        <IconButton size="small" onClick={() => setDeleteId(item.id)}>
-                          <DeleteIcon sx={{ fontSize: 18, color: 'var(--color-error)' }} />
-                        </IconButton>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <>
+            <p className="text-xs text-zinc-400 mb-4 animate-fade-in-up stagger-2">
+              Showing {filteredItems.length} report
+              {filteredItems.length !== 1 ? 's' : ''}
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {filteredItems.map((item, index) => (
+                <ItemCard key={item.id} item={item} index={index} />
+              ))}
+            </div>
+          </>
         )}
       </div>
-
-      {/* Delete Dialog */}
-      <Dialog open={deleteId !== null} onClose={() => setDeleteId(null)}>
-        <DialogTitle>Delete this item?</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            This action is permanent. The item will be removed from the feed and database.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteId(null)}>Cancel</Button>
-          <Button onClick={handleDelete} color="error" variant="contained">Delete</Button>
-        </DialogActions>
-      </Dialog>
     </div>
   );
 }
