@@ -8,6 +8,7 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import InboxOutlinedIcon from '@mui/icons-material/InboxOutlined';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlineOutlined';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import { withOthersLast } from '../utils/categoryOrder';
 
 export default function Feed() {
   const [items, setItems] = useState([]);
@@ -128,7 +129,7 @@ export default function Feed() {
                 className="px-3 py-1.5 rounded-lg text-xs font-medium border border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300 transition-all cursor-pointer"
               >
                 <option value="">All Categories</option>
-                {categories.map((cat) => (
+                {withOthersLast(categories).map((cat) => (
                   <option key={cat.id} value={cat.id}>
                     {cat.name || cat.categoryName}
                   </option>

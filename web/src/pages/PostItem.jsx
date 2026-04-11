@@ -9,6 +9,13 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlineOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutlined';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { withOthersLast } from '../utils/categoryOrder';
+import {
+  OTHER_SELECT_VALUE,
+  buildPlatformForApi,
+  parsePlatformFromStored,
+} from '../utils/contactPlatforms';
+import ContactPlatformFields from '../components/ContactPlatformFields';
 
 export default function PostItem() {
   const navigate = useNavigate();
@@ -23,7 +30,8 @@ export default function PostItem() {
     status: 'LOST',
     currentStatus: '',
     dropoffLocation: '',
-    contactPlatform: '',
+    platformSelect: '',
+    platformOther: '',
     contactDetails: '',
   });
   const [image, setImage] = useState(null);
@@ -46,9 +54,13 @@ export default function PostItem() {
         const res = await getProfile();
         const p = res.data?.data;
         if (!p || cancelled) return;
+        const plat = parsePlatformFromStored(
+          p.contactPlatform ?? ''
+        );
         setForm((f) => ({
           ...f,
-          contactPlatform: p.contactPlatform ?? f.contactPlatform,
+          platformSelect: plat.platformSelect,
+          platformOther: plat.platformOther,
           contactDetails: p.contactDetails ?? f.contactDetails,
         }));
       } catch {
@@ -114,8 +126,13 @@ export default function PostItem() {
     }
 
     if (form.currentStatus === 'HOLDING') {
-      if (!form.contactPlatform.trim()) {
-        errs.contactPlatform = 'Choose or enter a platform (e.g. MS Teams, Phone).';
+      if (!form.platformSelect) {
+        errs.platformSelect = 'Select a platform.';
+      } else if (
+        form.platformSelect === OTHER_SELECT_VALUE &&
+        !form.platformOther.trim()
+      ) {
+        errs.platformOther = 'Type the platform name.';
       }
       if (!form.contactDetails.trim()) {
         errs.contactDetails = 'Enter your contact details (ID, number, etc.).';
@@ -150,7 +167,10 @@ export default function PostItem() {
         payload.dropoffLocation = form.dropoffLocation.trim();
       }
       if (form.currentStatus === 'HOLDING') {
-        payload.contactPlatform = form.contactPlatform.trim();
+        payload.contactPlatform = buildPlatformForApi(
+          form.platformSelect,
+          form.platformOther
+        );
         payload.contactDetails = form.contactDetails.trim();
       }
 
@@ -165,7 +185,10 @@ export default function PostItem() {
       if (form.currentStatus === 'HOLDING') {
         try {
           await updateProfile({
-            contactPlatform: form.contactPlatform.trim(),
+            contactPlatform: buildPlatformForApi(
+              form.platformSelect,
+              form.platformOther
+            ),
             contactDetails: form.contactDetails.trim(),
           });
         } catch {
@@ -310,7 +333,7 @@ export default function PostItem() {
                 name="location"
                 value={form.location}
                 onChange={handleChange}
-                placeholder="3rd Floor RTL"
+                placeholder="e.g. 3rd Floor RTL, Study Area"
                 className={inputClass('location')}
               />
               {fieldErrors.location && (
@@ -330,7 +353,7 @@ export default function PostItem() {
                 className={inputClass('categoryId')}
               >
                 <option value="">Select category</option>
-                {categories.map((cat) => (
+                {withOthersLast(categories).map((cat) => (
                   <option key={cat.id} value={cat.id}>
                     {cat.name || cat.categoryName}
                   </option>
@@ -387,7 +410,7 @@ export default function PostItem() {
                 name="dropoffLocation"
                 value={form.dropoffLocation}
                 onChange={handleChange}
-                placeholder="e.g. Library Front Desk, Guard House"
+                placeholder="e.g. Library Front Desk, Front Gate Guard"
                 className={inputClass('dropoffLocation')}
               />
               {fieldErrors.dropoffLocation && (
@@ -402,31 +425,36 @@ export default function PostItem() {
                 Pulled from your profile when available. Saving here updates your profile too.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label htmlFor="contactPlatform" className="block text-sm font-medium text-zinc-700">
-                    Platform
-                  </label>
-                  <input
-                    id="contactPlatform"
-                    name="contactPlatform"
-                    value={form.contactPlatform}
-                    onChange={handleChange}
-                    placeholder="e.g. MS Teams, Facebook, Phone"
-                    className={inputClass('contactPlatform')}
-                    list="contact-platform-suggestions"
-                  />
-                  <datalist id="contact-platform-suggestions">
-                    <option value="MS Teams" />
-                    <option value="Facebook" />
-                    <option value="Messenger" />
-                    <option value="Phone" />
-                    <option value="Email" />
-                    <option value="Instagram" />
-                  </datalist>
-                  {fieldErrors.contactPlatform && (
-                    <p className="text-xs text-maroon-600">{fieldErrors.contactPlatform}</p>
-                  )}
-                </div>
+                <ContactPlatformFields
+                  platformSelect={form.platformSelect}
+                  platformOther={form.platformOther}
+                  onPlatformSelectChange={(value) => {
+                    setForm({
+                      ...form,
+                      platformSelect: value,
+                      platformOther:
+                        value === OTHER_SELECT_VALUE ? form.platformOther : '',
+                    });
+                    setFieldErrors({
+                      ...fieldErrors,
+                      platformSelect: undefined,
+                      platformOther: undefined,
+                    });
+                    if (error) setError('');
+                  }}
+                  onPlatformOtherChange={(value) => {
+                    setForm({ ...form, platformOther: value });
+                    setFieldErrors({
+                      ...fieldErrors,
+                      platformOther: undefined,
+                    });
+                    if (error) setError('');
+                  }}
+                  fieldErrors={fieldErrors}
+                  inputClass={inputClass}
+                  selectId="post-contactPlatformSelect"
+                  otherId="post-contactPlatformOther"
+                />
                 <div className="space-y-1.5">
                   <label htmlFor="contactDetails" className="block text-sm font-medium text-zinc-700">
                     Details

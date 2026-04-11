@@ -2,6 +2,12 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getProfile, updateProfile, getActivity } from '../services/api';
 import { formatContactLine } from '../utils/contactPreference';
+import {
+  buildPlatformForApi,
+  OTHER_SELECT_VALUE,
+  parsePlatformFromStored,
+} from '../utils/contactPlatforms';
+import ContactPlatformFields from '../components/ContactPlatformFields';
 import Navbar from '../components/Navbar';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutlineOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
@@ -31,7 +37,8 @@ export default function Profile() {
     firstName: '',
     lastName: '',
     studentId: '',
-    contactPlatform: '',
+    platformSelect: '',
+    platformOther: '',
     contactDetails: '',
   });
   const [passwordForm, setPasswordForm] = useState({
@@ -61,11 +68,13 @@ export default function Profile() {
         return;
       }
       setProfile(p);
+      const plat = parsePlatformFromStored(p?.contactPlatform ?? '');
       setForm({
         firstName: p?.firstName || '',
         lastName: p?.lastName || '',
         studentId: p?.studentId || '',
-        contactPlatform: p?.contactPlatform ?? '',
+        platformSelect: plat.platformSelect,
+        platformOther: plat.platformOther,
         contactDetails: p?.contactDetails ?? '',
       });
     } catch (err) {
@@ -101,7 +110,13 @@ export default function Profile() {
     setSaving(true);
     setFeedback(null);
     try {
-      const payload = { ...form };
+      const payload = {
+        firstName: form.firstName,
+        lastName: form.lastName,
+        studentId: form.studentId,
+        contactPlatform: buildPlatformForApi(form.platformSelect, form.platformOther),
+        contactDetails: form.contactDetails,
+      };
 
       if (showPasswordSection && passwordForm.newPassword) {
         if (passwordForm.newPassword !== passwordForm.confirmPassword) {
@@ -120,7 +135,15 @@ export default function Profile() {
 
       const res = await updateProfile(payload);
       if (res.data?.success) {
-        setProfile(res.data.data);
+        const saved = res.data.data;
+        setProfile(saved);
+        const plat = parsePlatformFromStored(saved?.contactPlatform ?? '');
+        setForm((prev) => ({
+          ...prev,
+          platformSelect: plat.platformSelect,
+          platformOther: plat.platformOther,
+          contactDetails: saved?.contactDetails ?? '',
+        }));
         setEditing(false);
         setShowPasswordSection(false);
         setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
@@ -244,11 +267,25 @@ export default function Profile() {
                 <FormField label="Last Name" value={form.lastName} onChange={(v) => setForm({ ...form, lastName: v })} />
                 <FormField label="Student ID" value={form.studentId} onChange={(v) => setForm({ ...form, studentId: v })} placeholder="e.g. 20-1234-567" />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FormField
-                    label="Contact — Platform"
-                    value={form.contactPlatform}
-                    onChange={(v) => setForm({ ...form, contactPlatform: v })}
-                    placeholder="e.g. MS Teams, Phone"
+                  <ContactPlatformFields
+                    platformSelect={form.platformSelect}
+                    platformOther={form.platformOther}
+                    onPlatformSelectChange={(value) =>
+                      setForm({
+                        ...form,
+                        platformSelect: value,
+                        platformOther:
+                          value === OTHER_SELECT_VALUE ? form.platformOther : '',
+                      })
+                    }
+                    onPlatformOtherChange={(value) =>
+                      setForm({ ...form, platformOther: value })
+                    }
+                    inputClass={() =>
+                      'w-full px-4 py-2.5 rounded-xl border border-zinc-300 bg-white text-sm text-zinc-900 placeholder:text-zinc-400 transition-all duration-200 hover:border-zinc-400'
+                    }
+                    selectId="profile-contactPlatformSelect"
+                    otherId="profile-contactPlatformOther"
                   />
                   <FormField
                     label="Contact — Details"
@@ -304,11 +341,13 @@ export default function Profile() {
                       setEditing(false);
                       setShowPasswordSection(false);
                       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                      const plat = parsePlatformFromStored(profile?.contactPlatform ?? '');
                       setForm({
                         firstName: profile?.firstName || '',
                         lastName: profile?.lastName || '',
                         studentId: profile?.studentId || '',
-                        contactPlatform: profile?.contactPlatform ?? '',
+                        platformSelect: plat.platformSelect,
+                        platformOther: plat.platformOther,
                         contactDetails: profile?.contactDetails ?? '',
                       });
                     }}

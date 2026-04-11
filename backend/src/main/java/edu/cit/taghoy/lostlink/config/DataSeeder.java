@@ -2,17 +2,25 @@ package edu.cit.taghoy.lostlink.config;
 
 import edu.cit.taghoy.lostlink.model.Category;
 import edu.cit.taghoy.lostlink.model.Role;
+import edu.cit.taghoy.lostlink.model.User;
 import edu.cit.taghoy.lostlink.repository.CategoryRepository;
 import edu.cit.taghoy.lostlink.repository.RoleRepository;
+import edu.cit.taghoy.lostlink.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 
 @Configuration
 public class DataSeeder {
+
+    /** Dev bootstrap admin; log in with identifier {@code admin} or this email and the seeded password. */
+    public static final String SEEDED_ADMIN_EMAIL = "admin@lostlink.local";
+    public static final String SEEDED_ADMIN_STUDENT_ID = "admin";
+    public static final String SEEDED_ADMIN_PASSWORD = "admin123";
 
     /**
      * After switching User from a string role to a FK to {@link Role}, existing MySQL rows often
@@ -24,6 +32,8 @@ public class DataSeeder {
     CommandLineRunner seedData(
             CategoryRepository categoryRepository,
             RoleRepository roleRepository,
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
             JdbcTemplate jdbcTemplate
     ) {
         return args -> {
@@ -68,6 +78,23 @@ public class DataSeeder {
             );
             if (repaired > 0) {
                 System.out.println("[Seeder] Repaired role_id on " + repaired + " user row(s) (was 0, NULL, or invalid FK).");
+            }
+
+            Role adminRole = roleRepository.findByRoleName("ADMIN")
+                    .orElseThrow(() -> new IllegalStateException("ADMIN role missing; check roles table."));
+            if (!userRepository.existsByEmail(SEEDED_ADMIN_EMAIL)
+                    && !userRepository.existsByStudentId(SEEDED_ADMIN_STUDENT_ID)) {
+                User admin = new User();
+                admin.setStudentId(SEEDED_ADMIN_STUDENT_ID);
+                admin.setEmail(SEEDED_ADMIN_EMAIL);
+                admin.setFirstName("System");
+                admin.setLastName("Administrator");
+                admin.setPasswordHash(passwordEncoder.encode(SEEDED_ADMIN_PASSWORD));
+                admin.setRole(adminRole);
+                userRepository.save(admin);
+                System.out.println("[Seeder] Created default admin user (identifier: "
+                        + SEEDED_ADMIN_STUDENT_ID + " or " + SEEDED_ADMIN_EMAIL
+                        + "). Change password and role in production.");
             }
 
             if (categoryRepository.count() == 0) {

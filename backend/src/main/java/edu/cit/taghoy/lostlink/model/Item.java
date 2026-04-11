@@ -24,9 +24,13 @@ public class Item {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    /** LOST or FOUND */
+    /** LOST, FOUND, or RESOLVED */
     @Column(nullable = false)
     private String status;
+
+    /** LOST or FOUND captured when an admin marks the item RESOLVED (used to restore). */
+    @Column(name = "status_before_resolve")
+    private String statusBeforeResolve;
 
     /** HOLDING or SURRENDERED */
     @Column(name = "current_status")

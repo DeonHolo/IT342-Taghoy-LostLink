@@ -5,6 +5,13 @@ import ItemService from '../services/ItemService';
 import CategoryService from '../services/CategoryService';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { decodeContactPreference } from '../utils/contactPreference';
+import {
+  buildPlatformForApi,
+  OTHER_SELECT_VALUE,
+  parsePlatformFromStored,
+} from '../utils/contactPlatforms';
+import ContactPlatformFields from '../components/ContactPlatformFields';
+import { withOthersLast } from '../utils/categoryOrder';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlineOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutlined';
 
@@ -21,7 +28,8 @@ export default function EditItem() {
     status: 'LOST',
     currentStatus: '',
     dropoffLocation: '',
-    contactPlatform: '',
+    platformSelect: '',
+    platformOther: '',
     contactDetails: '',
   });
   const [loading, setLoading] = useState(true);
@@ -49,6 +57,7 @@ export default function EditItem() {
               }
             : decodeContactPreference(item.contactPreference);
 
+        const plat = parsePlatformFromStored(dec.platform);
         setForm({
           title: item.title || '',
           description: item.description || '',
@@ -57,7 +66,8 @@ export default function EditItem() {
           status: item.status || 'LOST',
           currentStatus: item.currentStatus || '',
           dropoffLocation: item.dropoffLocation || '',
-          contactPlatform: dec.platform,
+          platformSelect: plat.platformSelect,
+          platformOther: plat.platformOther,
           contactDetails: dec.details,
         });
       } catch {
@@ -90,8 +100,13 @@ export default function EditItem() {
       errs.dropoffLocation = 'Specify where the item was surrendered.';
     }
     if (form.currentStatus === 'HOLDING') {
-      if (!form.contactPlatform.trim()) {
-        errs.contactPlatform = 'Enter a platform.';
+      if (!form.platformSelect) {
+        errs.platformSelect = 'Select a platform.';
+      } else if (
+        form.platformSelect === OTHER_SELECT_VALUE &&
+        !form.platformOther.trim()
+      ) {
+        errs.platformOther = 'Specify the platform.';
       }
       if (!form.contactDetails.trim()) {
         errs.contactDetails = 'Enter your contact details.';
@@ -125,7 +140,10 @@ export default function EditItem() {
         payload.dropoffLocation = form.dropoffLocation.trim();
       }
       if (form.currentStatus === 'HOLDING') {
-        payload.contactPlatform = form.contactPlatform.trim();
+        payload.contactPlatform = buildPlatformForApi(
+          form.platformSelect,
+          form.platformOther
+        );
         payload.contactDetails = form.contactDetails.trim();
       }
 
@@ -147,6 +165,11 @@ export default function EditItem() {
         ? 'border-maroon-400 bg-maroon-50/30'
         : 'border-zinc-300'
     }`;
+
+  const holdingPlatformFieldErrors = {
+    platformSelect: fieldErrors.platformSelect,
+    platformOther: fieldErrors.platformOther,
+  };
 
   if (loading) {
     return (
@@ -291,7 +314,7 @@ export default function EditItem() {
                 className={inputClass('categoryId')}
               >
                 <option value="">Select category</option>
-                {categories.map((cat) => (
+                {withOthersLast(categories).map((cat) => (
                   <option key={cat.id} value={cat.id}>
                     {cat.name || cat.categoryName}
                   </option>
@@ -355,29 +378,33 @@ export default function EditItem() {
 
           {form.currentStatus === 'HOLDING' && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-fade-in-up">
-              <div className="space-y-1.5">
-                <label htmlFor="contactPlatform" className="block text-sm font-medium text-zinc-700">
-                  Platform
-                </label>
-                <input
-                  id="contactPlatform"
-                  name="contactPlatform"
-                  value={form.contactPlatform}
-                  onChange={handleChange}
-                  placeholder="e.g. MS Teams, Phone"
-                  className={inputClass('contactPlatform')}
-                  list="edit-contact-platform-suggestions"
-                />
-                <datalist id="edit-contact-platform-suggestions">
-                  <option value="MS Teams" />
-                  <option value="Facebook" />
-                  <option value="Phone" />
-                  <option value="Email" />
-                </datalist>
-                {fieldErrors.contactPlatform && (
-                  <p className="text-xs text-maroon-600">{fieldErrors.contactPlatform}</p>
-                )}
-              </div>
+              <ContactPlatformFields
+                platformSelect={form.platformSelect}
+                platformOther={form.platformOther}
+                fieldErrors={holdingPlatformFieldErrors}
+                onPlatformSelectChange={(value) => {
+                  setForm({
+                    ...form,
+                    platformSelect: value,
+                    platformOther:
+                      value === OTHER_SELECT_VALUE ? form.platformOther : '',
+                  });
+                  setFieldErrors({
+                    ...fieldErrors,
+                    platformSelect: undefined,
+                    platformOther: undefined,
+                  });
+                  if (error) setError('');
+                }}
+                onPlatformOtherChange={(value) => {
+                  setForm({ ...form, platformOther: value });
+                  setFieldErrors({ ...fieldErrors, platformOther: undefined });
+                  if (error) setError('');
+                }}
+                inputClass={inputClass}
+                selectId="edit-contactPlatformSelect"
+                otherId="edit-contactPlatformOther"
+              />
               <div className="space-y-1.5">
                 <label htmlFor="contactDetails" className="block text-sm font-medium text-zinc-700">
                   Details

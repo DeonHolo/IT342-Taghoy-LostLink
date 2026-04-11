@@ -26,6 +26,8 @@ public class ItemDTO {
     private String title;
     private String description;
     private String status;
+    /** LOST or FOUND saved when status became RESOLVED; null otherwise. */
+    private String statusBeforeResolve;
     private String currentStatus;
     private String location;
     private String dropoffLocation;
@@ -65,6 +67,7 @@ public class ItemDTO {
                 .title(item.getTitle())
                 .description(item.getDescription())
                 .status(item.getStatus())
+                .statusBeforeResolve(item.getStatusBeforeResolve())
                 .currentStatus(item.getCurrentStatus())
                 .location(item.getLocation())
                 .dropoffLocation(hideSensitiveInfo ? null : item.getDropoffLocation())

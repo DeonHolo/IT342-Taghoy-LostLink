@@ -77,6 +77,14 @@ export const adminUpdateRole = (userId, roleName) => API.put(`/admin/users/${use
 export const adminDeleteUser = (userId) => API.delete(`/admin/users/${userId}`);
 export const adminGetItems = () => API.get('/admin/items');
 export const adminDeleteItem = (itemId) => API.delete(`/admin/items/${itemId}`);
+export const adminResolveItem = (itemId) => API.put(`/admin/items/${itemId}/resolve`);
+export const adminUnresolveItem = (itemId, restoreStatus) =>
+  API.put(`/admin/items/${itemId}/unresolve`, { restoreStatus });
+export const adminGetClaims = () => API.get('/admin/claims');
+export const adminGetCategories = () => API.get('/admin/categories');
+export const adminCreateCategory = (name) => API.post('/admin/categories', { name });
+export const adminUpdateCategory = (catId, name) => API.put(`/admin/categories/${catId}`, { name });
+export const adminDeleteCategory = (catId) => API.delete(`/admin/categories/${catId}`);
 export const adminGetStats = () => API.get('/admin/stats');
 
 export default API;
