@@ -1,0 +1,181 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R] /Count 2 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 3495 >>
+stream
+0.2 w
+BT /F2 18 Tf 48 744 Td (Full Regression Test Report: LostLink) Tj ET
+BT /F1 10 Tf 48 720 Td (Self-contained submission document for Vertical Slice Refactoring and Full Regression Testing.) Tj ET
+BT /F2 13 Tf 48 704 Td (1. GitHub Repository Link) Tj ET
+BT /F1 10 Tf 48 685 Td (Repository URL: https://github.com/DeonHolo/IT342-Taghoy-LostLink) Tj ET
+BT /F1 10 Tf 48 669 Td (Refactor branch: deonholo/ref/vertical-slice-regression) Tj ET
+BT /F2 10 Tf 48 653 Td (Before final submission, commit and push this branch so GitHub shows the final refactoring/testing) Tj ET
+BT /F2 10 Tf 48 639 Td (commit history.) Tj ET
+BT /F2 13 Tf 48 623 Td (Recent Commit History) Tj ET
+BT /F1 10 Tf 58 604 Td (- 3f4310d feat: add item resolution functionality and email notifications; enhance item filtering and) Tj ET
+BT /F1 10 Tf 58 590 Td (UI updates for resolved status) Tj ET
+BT /F1 10 Tf 58 574 Td (- d6f29c5 feat: implement user suspension management and enhance item filtering by date range; add) Tj ET
+BT /F1 10 Tf 58 560 Td (new ClaimController for claims handling) Tj ET
+BT /F1 10 Tf 58 544 Td (- a624f67 feat: enhance admin functionalities with item resolution, claims management, and category) Tj ET
+BT /F1 10 Tf 58 530 Td (handling; introduce new components for platform selection in user interactions) Tj ET
+BT /F1 10 Tf 58 514 Td (- 5588a6e feat: enhance user and admin functionalities with role management, data seeding, and) Tj ET
+BT /F1 10 Tf 58 500 Td (improved CORS settings; add admin dashboard and user profile features) Tj ET
+BT /F1 10 Tf 58 484 Td (- a47c20f feat: implement Google OAuth login and role management in backend; update frontend for) Tj ET
+BT /F1 10 Tf 58 470 Td (Google sign-in integration) Tj ET
+BT /F1 10 Tf 58 454 Td (- c9066ea IT342 Phase 3 - Web Main Feature Completed) Tj ET
+BT /F1 10 Tf 58 438 Td (- 4266e57 Merge pull request #2 from DeonHolo/feature/design-patterns-refactor) Tj ET
+BT /F1 10 Tf 58 422 Td (- 8d02708 feat: implement JWT-based authentication and secure API endpoints using the Builder pattern) Tj ET
+BT /F1 10 Tf 58 408 Td (for response handling.) Tj ET
+BT /F2 13 Tf 48 392 Td (2. Refactoring Summary) Tj ET
+BT /F1 10 Tf 48 373 Td (Backend, web, and mobile source folders were reorganized toward Vertical Slice Architecture while) Tj ET
+BT /F1 10 Tf 48 359 Td (preserving implemented routes and behavior. Shared/cross-cutting code was separated into explicit) Tj ET
+BT /F1 10 Tf 48 345 Td (shared, platform, core, and integration packages.) Tj ET
+BT /F2 13 Tf 48 329 Td (3. Updated Project Structure) Tj ET
+48 272 100 38 re S
+BT /F2 8 Tf 52 298 Td (Platform) Tj ET
+148 272 416 38 re S
+BT /F2 8 Tf 152 298 Td (Slices) Tj ET
+48 234 100 38 re S
+BT /F1 8 Tf 52 260 Td (Backend) Tj ET
+148 234 416 38 re S
+BT /F1 8 Tf 152 260 Td (feature.auth, feature.item, feature.category, feature.claim, feature.user,) Tj ET
+BT /F1 8 Tf 152 250 Td (feature.admin, integration.email, platform.security, shared) Tj ET
+48 196 100 38 re S
+BT /F1 8 Tf 52 222 Td (Web) Tj ET
+148 196 416 38 re S
+BT /F1 8 Tf 152 222 Td (features.auth, features.feed, features.items, features.profile,) Tj ET
+BT /F1 8 Tf 152 212 Td (features.admin, shared.api, shared.components, shared.utils) Tj ET
+48 158 100 38 re S
+BT /F1 8 Tf 52 184 Td (Mobile) Tj ET
+148 158 416 38 re S
+BT /F1 8 Tf 152 184 Td (core.network, core.session, features.auth, features.auth.data,) Tj ET
+BT /F1 8 Tf 152 174 Td (features.dashboard) Tj ET
+BT /F2 13 Tf 48 150 Td (4. Automated Test And Coverage Evidence) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 3685 >>
+stream
+0.2 w
+48 706 95 38 re S
+BT /F2 8 Tf 52 732 Td (Area) Tj ET
+143 706 180 38 re S
+BT /F2 8 Tf 147 732 Td (Command) Tj ET
+323 706 241 38 re S
+BT /F2 8 Tf 327 732 Td (Result) Tj ET
+48 668 95 38 re S
+BT /F1 8 Tf 52 694 Td (Backend) Tj ET
+143 668 180 38 re S
+BT /F1 8 Tf 147 694 Td (backend\\mvnw.cmd test) Tj ET
+323 668 241 38 re S
+BT /F1 8 Tf 327 694 Td (PASS; JaCoCo generated; 118/826 lines,) Tj ET
+BT /F1 8 Tf 327 684 Td (14.29%) Tj ET
+48 630 95 38 re S
+BT /F1 8 Tf 52 656 Td (Web lint) Tj ET
+143 630 180 38 re S
+BT /F1 8 Tf 147 656 Td (npm run lint) Tj ET
+323 630 241 38 re S
+BT /F1 8 Tf 327 656 Td (PASS; no ESLint errors) Tj ET
+48 592 95 38 re S
+BT /F1 8 Tf 52 618 Td (Web build) Tj ET
+143 592 180 38 re S
+BT /F1 8 Tf 147 618 Td (npm run build) Tj ET
+323 592 241 38 re S
+BT /F1 8 Tf 327 618 Td (PASS; Vite build success) Tj ET
+48 554 95 38 re S
+BT /F1 8 Tf 52 580 Td (Mobile) Tj ET
+143 554 180 38 re S
+BT /F1 8 Tf 147 580 Td (mobile\\gradlew.bat test) Tj ET
+323 554 241 38 re S
+BT /F1 8 Tf 327 580 Td (PASS; Gradle BUILD SUCCESSFUL) Tj ET
+BT /F1 10 Tf 48 546 Td (Backend JaCoCo line coverage: 118/826 lines covered \(14.29%\). HTML report:) Tj ET
+BT /F1 10 Tf 48 532 Td (backend/target/site/jacoco/index.html. CSV copy: docs/Full Regression Submission/evidence/backend-) Tj ET
+BT /F1 10 Tf 48 518 Td (jacoco.csv.) Tj ET
+BT /F2 13 Tf 48 502 Td (5. Regression Results) Tj ET
+48 445 125 38 re S
+BT /F2 8 Tf 52 471 Td (Group) Tj ET
+173 445 85 38 re S
+BT /F2 8 Tf 177 471 Td (Result) Tj ET
+258 445 306 38 re S
+BT /F2 8 Tf 262 471 Td (Notes) Tj ET
+48 407 125 38 re S
+BT /F1 8 Tf 52 433 Td (Authentication/Securit) Tj ET
+BT /F1 8 Tf 52 423 Td (y) Tj ET
+173 407 85 38 re S
+BT /F1 8 Tf 177 433 Td (PASS) Tj ET
+258 407 306 38 re S
+BT /F1 8 Tf 262 433 Td (Implemented backend/web/mobile auth surfaces preserved.) Tj ET
+48 369 125 38 re S
+BT /F1 8 Tf 52 395 Td (RBAC) Tj ET
+173 369 85 38 re S
+BT /F1 8 Tf 177 395 Td (PASS/PARTIAL) Tj ET
+258 369 306 38 re S
+BT /F1 8 Tf 262 395 Td (Backend/web implemented; mobile role display only.) Tj ET
+48 331 125 38 re S
+BT /F1 8 Tf 52 357 Td (Items/File Upload) Tj ET
+173 331 85 38 re S
+BT /F1 8 Tf 177 357 Td (PASS/PARTIAL) Tj ET
+258 331 306 38 re S
+BT /F1 8 Tf 262 357 Td (Implemented flows preserved; manually verify found item) Tj ET
+BT /F1 8 Tf 262 347 Td (image requirement.) Tj ET
+48 293 125 38 re S
+BT /F1 8 Tf 52 319 Td (Email/OAuth) Tj ET
+173 293 85 38 re S
+BT /F1 8 Tf 177 319 Td (PARTIAL) Tj ET
+258 293 306 38 re S
+BT /F1 8 Tf 262 319 Td (Code paths preserved; live proof requires credentials.) Tj ET
+48 255 125 38 re S
+BT /F1 8 Tf 52 281 Td (External API) Tj ET
+173 255 85 38 re S
+BT /F1 8 Tf 177 281 Td (GAP) Tj ET
+258 255 306 38 re S
+BT /F1 8 Tf 262 281 Td (Imagga integration not found.) Tj ET
+48 217 125 38 re S
+BT /F1 8 Tf 52 243 Td (Mobile domain screens) Tj ET
+173 217 85 38 re S
+BT /F1 8 Tf 177 243 Td (GAP) Tj ET
+258 217 306 38 re S
+BT /F1 8 Tf 262 243 Td (Item/profile/admin mobile screens not implemented.) Tj ET
+BT /F2 13 Tf 48 209 Td (6. Issues Fixed) Tj ET
+BT /F1 10 Tf 58 190 Td (- Backend import errors after package move were fixed.) Tj ET
+BT /F1 10 Tf 58 174 Td (- Web ESLint issues were fixed or scoped to existing patterns.) Tj ET
+BT /F1 10 Tf 58 158 Td (- Android R resource imports were fixed after package move.) Tj ET
+BT /F2 13 Tf 48 142 Td (7. Conclusion) Tj ET
+BT /F1 10 Tf 48 123 Td (The project is refactored and validated with available automated commands. This PDF centralizes the) Tj ET
+BT /F1 10 Tf 48 109 Td (repository link, branch, recent commit history, refactor summary, test evidence, coverage evidence,) Tj ET
+BT /F1 10 Tf 48 95 Td (issue fixes, and gaps without referencing external Markdown files.) Tj ET
+endstream
+endobj
+xref
+0 9
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000191 00000 n 
+0000000266 00000 n 
+0000000402 00000 n 
+0000003949 00000 n 
+0000004085 00000 n 
+trailer
+<< /Size 9 /Root 1 0 R >>
+startxref
+7822
+%%EOF

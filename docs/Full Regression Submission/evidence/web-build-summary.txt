@@ -1,0 +1,3 @@
+Command: npm run build (in web/)
+Result: PASS
+Evidence: Vite built 376 modules and emitted dist assets successfully.

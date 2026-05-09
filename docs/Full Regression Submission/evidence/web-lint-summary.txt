@@ -1,0 +1,3 @@
+Command: npm run lint (in web/)
+Result: PASS
+Evidence: ESLint completed with no reported errors.

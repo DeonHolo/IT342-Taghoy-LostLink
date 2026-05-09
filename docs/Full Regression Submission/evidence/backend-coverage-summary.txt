@@ -1,0 +1,6 @@
+Command: backend\mvnw.cmd test
+Coverage tool: JaCoCo Maven Plugin
+HTML report path: backend/target/site/jacoco/index.html
+CSV copy: docs/Full Regression Submission/evidence/backend-jacoco.csv
+Line coverage: 118/826 lines covered (14.29%)
+Note: Current coverage is low because the existing automated suite only has a Spring context test.

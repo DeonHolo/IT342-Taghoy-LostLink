@@ -1,0 +1,146 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [5 0 R 7 0 R 9 0 R] /Count 3 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 6 0 R >>
+endobj
+6 0 obj
+<< /Length 2852 >>
+stream
+0.2 w
+BT /F2 18 Tf 48 744 Td (Automated Test Evidence: LostLink) Tj ET
+BT /F1 10 Tf 48 720 Td (Centralized PDF for automated test results, logs, coverage report, and screenshot placeholders.) Tj ET
+BT /F2 13 Tf 48 704 Td (Repository And Branch) Tj ET
+BT /F1 10 Tf 48 685 Td (Repository URL: https://github.com/DeonHolo/IT342-Taghoy-LostLink) Tj ET
+BT /F1 10 Tf 48 669 Td (Refactor branch: deonholo/ref/vertical-slice-regression) Tj ET
+BT /F2 13 Tf 48 653 Td (Automated Results And Coverage) Tj ET
+48 596 105 38 re S
+BT /F2 8 Tf 52 622 Td (Evidence) Tj ET
+153 596 145 38 re S
+BT /F2 8 Tf 157 622 Td (Command) Tj ET
+298 596 160 38 re S
+BT /F2 8 Tf 302 622 Td (Recorded Result) Tj ET
+458 596 106 38 re S
+BT /F2 8 Tf 462 622 Td (Coverage) Tj ET
+48 558 105 38 re S
+BT /F1 8 Tf 52 584 Td (Backend tests) Tj ET
+153 558 145 38 re S
+BT /F1 8 Tf 157 584 Td (backend\\mvnw.cmd test) Tj ET
+298 558 160 38 re S
+BT /F1 8 Tf 302 584 Td (PASS: 1 test, 0 failures) Tj ET
+458 558 106 38 re S
+BT /F1 8 Tf 462 584 Td (JaCoCo 118/826) Tj ET
+BT /F1 8 Tf 462 574 Td (lines, 14.29%) Tj ET
+48 520 105 38 re S
+BT /F1 8 Tf 52 546 Td (Web lint) Tj ET
+153 520 145 38 re S
+BT /F1 8 Tf 157 546 Td (npm run lint) Tj ET
+298 520 160 38 re S
+BT /F1 8 Tf 302 546 Td (PASS: no ESLint errors) Tj ET
+458 520 106 38 re S
+BT /F1 8 Tf 462 546 Td (N/A) Tj ET
+48 482 105 38 re S
+BT /F1 8 Tf 52 508 Td (Web build) Tj ET
+153 482 145 38 re S
+BT /F1 8 Tf 157 508 Td (npm run build) Tj ET
+298 482 160 38 re S
+BT /F1 8 Tf 302 508 Td (PASS: Vite build success) Tj ET
+458 482 106 38 re S
+BT /F1 8 Tf 462 508 Td (N/A) Tj ET
+48 444 105 38 re S
+BT /F1 8 Tf 52 470 Td (Mobile tests) Tj ET
+153 444 145 38 re S
+BT /F1 8 Tf 157 470 Td (mobile\\gradlew.bat test) Tj ET
+298 444 160 38 re S
+BT /F1 8 Tf 302 470 Td (PASS: BUILD SUCCESSFUL) Tj ET
+458 444 106 38 re S
+BT /F1 8 Tf 462 470 Td (Not configured) Tj ET
+BT /F1 10 Tf 48 436 Td (Backend JaCoCo line coverage: 118/826 lines covered \(14.29%\). HTML report:) Tj ET
+BT /F1 10 Tf 48 422 Td (backend/target/site/jacoco/index.html. CSV copy: docs/Full Regression Submission/evidence/backend-) Tj ET
+BT /F1 10 Tf 48 408 Td (jacoco.csv.) Tj ET
+BT /F2 13 Tf 48 392 Td (Backend Maven Test Screenshot) Tj ET
+BT /F1 10 Tf 48 373 Td (Command/evidence: cd backend; .\\mvnw.cmd test) Tj ET
+BT /F1 10 Tf 48 357 Td (Screenshot must show: BUILD SUCCESS, Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, and JaCoCo) Tj ET
+BT /F1 10 Tf 48 343 Td (report generation.) Tj ET
+48 192 516 135 re S
+BT /F2 12 Tf 60 299 Td (Backend Maven Test Screenshot) Tj ET
+BT /F1 9 Tf 60 279 Td (Insert screenshot here before final submission.) Tj ET
+BT /F2 13 Tf 48 178 Td (Backend Coverage Screenshot) Tj ET
+BT /F1 10 Tf 48 159 Td (Command/evidence: open backend/target/site/jacoco/index.html) Tj ET
+BT /F1 10 Tf 48 143 Td (Screenshot must show: JaCoCo HTML coverage report summary page.) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 8 0 R >>
+endobj
+8 0 obj
+<< /Length 1109 >>
+stream
+0.2 w
+48 609 516 135 re S
+BT /F2 12 Tf 60 716 Td (Backend Coverage Screenshot) Tj ET
+BT /F1 9 Tf 60 696 Td (Insert screenshot here before final submission.) Tj ET
+BT /F2 13 Tf 48 595 Td (Web ESLint Screenshot) Tj ET
+BT /F1 10 Tf 48 576 Td (Command/evidence: cd web; npm run lint) Tj ET
+BT /F1 10 Tf 48 560 Td (Screenshot must show: Command finishes with no ESLint errors.) Tj ET
+48 409 516 135 re S
+BT /F2 12 Tf 60 516 Td (Web ESLint Screenshot) Tj ET
+BT /F1 9 Tf 60 496 Td (Insert screenshot here before final submission.) Tj ET
+BT /F2 13 Tf 48 395 Td (Web Build Screenshot) Tj ET
+BT /F1 10 Tf 48 376 Td (Command/evidence: cd web; npm run build) Tj ET
+BT /F1 10 Tf 48 360 Td (Screenshot must show: Vite build success and dist asset output.) Tj ET
+48 209 516 135 re S
+BT /F2 12 Tf 60 316 Td (Web Build Screenshot) Tj ET
+BT /F1 9 Tf 60 296 Td (Insert screenshot here before final submission.) Tj ET
+BT /F2 13 Tf 48 195 Td (Mobile Gradle Test Screenshot) Tj ET
+BT /F1 10 Tf 48 176 Td (Command/evidence: cd mobile; .\\gradlew.bat test) Tj ET
+BT /F1 10 Tf 48 160 Td (Screenshot must show: BUILD SUCCESSFUL.) Tj ET
+endstream
+endobj
+9 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 10 0 R >>
+endobj
+10 0 obj
+<< /Length 850 >>
+stream
+0.2 w
+48 609 516 135 re S
+BT /F2 12 Tf 60 716 Td (Mobile Gradle Test Screenshot) Tj ET
+BT /F1 9 Tf 60 696 Td (Insert screenshot here before final submission.) Tj ET
+BT /F2 13 Tf 48 595 Td (Screenshot Instructions) Tj ET
+BT /F1 10 Tf 58 576 Td (- Run one command at a time in the terminal.) Tj ET
+BT /F1 10 Tf 58 560 Td (- After success output appears, press Windows + Shift + S.) Tj ET
+BT /F1 10 Tf 58 544 Td (- Select the terminal area and save under docs/Full Regression Submission/evidence/.) Tj ET
+BT /F1 10 Tf 58 528 Td (- Recommended filenames: backend-test-screenshot.png, backend-coverage-screenshot.png, web-lint-) Tj ET
+BT /F1 10 Tf 58 514 Td (screenshot.png, web-build-screenshot.png, mobile-test-screenshot.png.) Tj ET
+BT /F1 10 Tf 58 498 Td (- Insert the screenshots into this PDF before final submission if your editor allows it.) Tj ET
+endstream
+endobj
+xref
+0 11
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000127 00000 n 
+0000000197 00000 n 
+0000000272 00000 n 
+0000000408 00000 n 
+0000003312 00000 n 
+0000003448 00000 n 
+0000004609 00000 n 
+0000004746 00000 n 
+trailer
+<< /Size 11 /Root 1 0 R >>
+startxref
+5648
+%%EOF
