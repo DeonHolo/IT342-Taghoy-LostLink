@@ -1,15 +1,15 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import ProtectedRoute from './components/ProtectedRoute';
-import Register from './pages/Register';
-import Login from './pages/Login';
-import Feed from './pages/Feed';
-import PostItem from './pages/PostItem';
-import ItemDetail from './pages/ItemDetail';
-import EditItem from './pages/EditItem';
-import MyPosts from './pages/MyPosts';
-import Profile from './pages/Profile';
-import AdminDashboard from './pages/AdminDashboard';
+import { AuthProvider } from './features/auth/context/AuthContext';
+import ProtectedRoute from './features/auth/components/ProtectedRoute';
+import Register from './features/auth/pages/Register';
+import Login from './features/auth/pages/Login';
+import Feed from './features/feed/pages/Feed';
+import PostItem from './features/items/pages/PostItem';
+import ItemDetail from './features/items/pages/ItemDetail';
+import EditItem from './features/items/pages/EditItem';
+import MyPosts from './features/items/pages/MyPosts';
+import Profile from './features/profile/pages/Profile';
+import AdminDashboard from './features/admin/pages/AdminDashboard';
 
 function App() {
   return (
